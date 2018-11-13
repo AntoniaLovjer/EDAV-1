@@ -12,6 +12,7 @@
 import os
 import pandas as pd
 from AndPotap.Utils.feature_generation import format_correctly
+from AndPotap.Utils.feature_generation import construct_diffs
 # ===========================================================================
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Paths and files
@@ -28,4 +29,5 @@ df = pd.read_csv(file, nrows=100)
 # Format dates into the correct shape
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 df = format_correctly(df)
+df = construct_diffs(df)
 # ===========================================================================

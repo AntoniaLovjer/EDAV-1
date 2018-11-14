@@ -27,8 +27,8 @@ file_output = './DBs/marathon_2018_aug.csv'
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Load the data
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-df = pd.read_csv(file_input, nrows=100)  # Read a chunk
-# df = pd.read_csv(file_input)  # Read all
+# df = pd.read_csv(file_input, nrows=100)  # Read a chunk
+df = pd.read_csv(file_input)  # Read all
 # ===========================================================================
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Format dates into the correct shape
@@ -42,5 +42,5 @@ df = reshape_properly(df, verbose=True)
 # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 df.to_csv(file_output, index=False)
 
-print('The whole process took: {:6.1f} sec'.format(time.time() - t0))
+print('\nThe whole process took: {:6.1f} sec'.format(time.time() - t0))
 # ===========================================================================

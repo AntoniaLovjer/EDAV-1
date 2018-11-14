@@ -76,7 +76,7 @@ def format_correctly(df, verbose=False):
 
     t1 = time.time()
     if verbose:
-        print('Formatting took: {:6.1f} sec'.format(t1 - t0))
+        print('\nFormatting took: {:6.1f} sec'.format(t1 - t0))
 
     return df
 
@@ -153,7 +153,7 @@ def add_diffs(df, verbose=False):
 
     t1 = time.time()
     if verbose:
-        print('Constructing diffs took: {:6.1f} sec'.format(t1 - t0))
+        print('\nConstructing diffs took: {:6.1f} sec'.format(t1 - t0))
 
     return df
 
@@ -227,7 +227,7 @@ def reshape_properly(df, verbose=False):
 
     t1 = time.time()
     if verbose:
-        print('Constructing diffs took: {:6.1f} sec'.format(t1 - t0))
+        print('\nAugmenting the data took: {:6.1f} sec'.format(t1 - t0))
 
     return df_placeholder
 # ===========================================================================

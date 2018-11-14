@@ -23,7 +23,8 @@ def format_correctly(df, verbose=False):
     the DateTime objects columns in seconds
     :param df: pd.DataFrame | the marathon pd.DataFrame
     :param verbose: bool | True prints the time the function took
-    :return: pd.DataFrame | the original pd.DataFrame with the extra columns
+    :return: pd.DataFrame | the original pd.DataFrame with the
+                            extra columns
     """
     t0 = time.time()
 
@@ -53,13 +54,14 @@ def format_correctly(df, verbose=False):
     return df
 
 
-def construct_diffs(df, verbose=False):
+def add_diffs(df, verbose=False):
     """
     Adds the features that contain the differences in seconds
     between the marathon 5 k splits
     :param df: pd.DataFrame | the marathon pd.DataFrame
     :param verbose: bool | True prints the time the function took
-    :return: pd.DataFrame | the original pd.DataFrame with the extra columns
+    :return: pd.DataFrame | the original pd.DataFrame with
+                            the extra columns
     """
     t0 = time.time()
     col_diffs = ['splint_5k_sec',
@@ -87,8 +89,11 @@ def construct_diffs(df, verbose=False):
         new_col_pace_index = 'pace_index_' + str(i + 2)
 
         # Introduce the new data
-        df.loc[:, new_col_diff] = (df[col_diffs[i + 1]] - df[col_diffs[i]])
+        df.loc[:, new_col_diff] = (df[col_diffs[i + 1]] -
+                                   df[col_diffs[i]])
+
         df.loc[:, new_col_pace] = df[new_col_diff] / df['pace_total']
+
         df.loc[:, new_col_pace_index] = 100 * (df[new_col_diff] /
                                                df[col_diffs[0]])
 
@@ -96,5 +101,67 @@ def construct_diffs(df, verbose=False):
     if verbose:
         print('Constructing diffs took: {:6.1f} sec'.format(t1 - t0))
 
+    return df
+
+
+def reshape_properly(df, verbose=False):
+    t0 = time.time()
+    df['ID'] = df.index
+    aux = df.copy()
+    id_vars = ['ID',
+               'bib',
+               'gender_age',
+               'gun_place',
+               'gun_time',
+               'name',
+               'official_time',
+               'pace_per_mile',
+               'percentile_age-graded',
+               'place',
+               'place_age-graded',
+               'place_age-graded_of',
+               'place_age-group',
+               'place_age-group_of',
+               'place_gender',
+               'place_gender_of',
+               'place_overall',
+               'place_overall_of',
+               'team',
+               'time_age-graded',
+               'pace_total',
+               'splint_half']
+
+    # Melt the DataFrame
+    aux = pd.melt(frame=aux, id_vars=id_vars)
+
+    aux.loc[:, 'identifier'] = 'NaN'
+
+    mask = aux['variable'].str.contains('k')
+    aux.loc[mask, 'identifier'] = 'date_time'
+
+    mask = aux['variable'].str.contains('k_sec')
+    aux.loc[mask, 'identifier'] = 'sec'
+
+    mask = aux['variable'].str.contains('diff_')
+    aux.loc[mask, 'identifier'] = 'diff'
+
+    mask = aux['variable'].str.contains('pace_')
+    aux.loc[mask, 'identifier'] = 'pace'
+
+    mask = aux['variable'].str.contains('pace_index')
+    aux.loc[mask, 'identifier'] = 'pace_index'
+
+    id_q = aux['identifier'].unique()
+    for identifier in id_q:
+        tmp = aux[aux['identifier'] == identifier].copy()
+        tmp = tmp[['ID', 'identifier', 'value']]
+        tmp = tmp.set_index('ID')
+        tmp = tmp.pivot(columns='identifier', values='value')
+
+    # Revert back the columns
+
+    t1 = time.time()
+    if verbose:
+        print('Constructing diffs took: {:6.1f} sec'.format(t1 - t0))
     return df
 # ===========================================================================

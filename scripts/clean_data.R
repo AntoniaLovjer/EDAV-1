@@ -62,11 +62,30 @@ clean_marathon_data <- function(input_path='../data/raw',
     filter(is.na(splint_half) | is.na(splint_20k) | splint_20k <= splint_half) %>% 
     filter(is.na(splint_half) | is.na(splint_25k) | splint_half <= splint_25k)
   
+  # place overall
+  if (year == 2018){
+    runners <- 52697
+    wheelchairs <- 56
+    handcycles <- 52
+  } else if (year == 2017){
+    runners <- 50641
+    wheelchairs <- 51
+    handcycles <- 69
+  } else if (year == 2016){
+    runners <- 51275
+    wheelchairs <- 49
+    handcycles <- 68
+  } else {
+    runners <- 49461
+    wheelchairs <- 48
+    handcycles <- 78
+  }
+  
   # Add type of participant
   marathon_clean <- marathon_clean %>% 
     separate(gender_age, c('gender','age' ), sep=1) %>% 
-    mutate(type = ifelse(place_overall_of == 52697 | gun_place > 56, 'R',
-                         ifelse(place_overall_of == 56, 'W', 'H')),
+    mutate(type = ifelse(place_overall_of == runners | gun_place > max(wheelchairs, handcycles), 'R',
+                         ifelse(place_overall_of == wheelchairs, 'W', 'H')),
            age = as.numeric(age),
            team = ifelse(team == '0', NA, team),
            year = year)
@@ -76,7 +95,4 @@ clean_marathon_data <- function(input_path='../data/raw',
   #return(marathon_clean)
 }
 
-clean_marathon_data(year = 2018)
-clean_marathon_data(year = 2017)
-clean_marathon_data(year = 2016)
 

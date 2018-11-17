@@ -1,0 +1,56 @@
+---
+title: 'NYC Marathon'
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# 1. Description of Data
+
+## 1.1 Source
+## 1.2 Web Scrapping
+## 1.3 Columns 
+
+(Assumptions made)
+
+# 2. Cealning Process / Quality
+
+## 2.1 Mention inconsitencies 
+## 2.2 Messy Location 
+## 2.3 Time
+## 2.4 Outliers
+
+# 3. Analysis
+
+## 3.1 Demopgraphic
+
+(over time)
+
+* Age
+* Gender
+* Location
+* Teams (ranks)
+
+## 3.2 Running Variables
+
+* Strategy (clusters)
+* Waves
+
+## 3.3 Perfomance
+
+* Over time
+* waves
+
+
+
+# Questions
+
+1. Is gender a significant indicator of performance? (Arthur)
+2. What are the running strategies? What is their impact? (Andres)
+3. How has the gender ratio changed over time? (Andrea & Antonia)
+4. How do performance change by location? (Andrea & Antonia)

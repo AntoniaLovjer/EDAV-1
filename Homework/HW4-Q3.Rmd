@@ -1,0 +1,112 @@
+---
+title: "HW4_Q3"
+author: "Antonia Lovjer"
+date: "11/13/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(ggplot2)
+library(dplyr)
+```
+
+
+The data set that we are using was taken from the NYRR Marathon website, and includes data on each individual finisher of the NYRR 2018 NY Marathon. The entire data set contains 52670 observations and 33 original variables.
+
+```{r}
+data <- read.csv("/Users/antonialovjer/Documents/Columbia/EDAV/Final Project/marathon_2018.csv")
+head(data)
+```
+
+```{r echo=FALSE}
+gender <- c()
+age <- c()
+for (i in 1:nrow(data)) {
+  gender_ind <- (substr(as.character(data[i, "gender_age"]), 1, 1))
+  age_ind <- (substr(as.character(data[i, "gender_age"]), 2, 3))
+  gender[i] = gender_ind
+  age[i] = age_ind
+}
+data$gender <- gender
+data$age <- as.numeric(age)
+```
+
+**Histogram of Age** 
+
+The variable that I will be examining here is **age** of the marathon finishers. First we will look at the distribution of the ages in a histogram.
+
+The distribution of the data appears to be approximately normal centered around 40. Overall, there are more younger people finishing the race in comparison to older people. From this plot, my next questions would be how official finish times differ by age, and the relationship between age and split times for the runners.
+
+```{r, fig.width=7, warning=FALSE}
+
+plot1 <- ggplot(data, aes(x=age)) + 
+  geom_histogram(color='grey', fill='lightblue', binwidth=5, center=62.5) + 
+  ggtitle("Age Distribution of 2018 NYC Marathon Finishers") + 
+  scale_x_continuous(breaks=seq(15,90, by=5)) +
+  ylab("Count") +
+  xlab("Age")
+plot1
+```
+
+ 
+
+**Sample of Finish Times by Age** 
+
+Next we look at a hexagonal heat map of the age and finish times for the first 2000 marathon finishers. 
+
+From this plot we see that overall the top finishers tend to be younger (< 60), with the fastest runner finishing the race in 96 minutes. The majority of the data is centered around 177 minutes, and in the 30-45yr range of the scale. The age observation is consistent with the conlcusion from the histogram above showing that the ages of the runners are centered around 40, and that there are fewer older runners compared to younger runners. Another interesting observation is that there are no old runners with long finish times present in the top 2000. The fact that the finish times are so concentrated around 177 begs the question of what is the distribution of the finish times for the entire data set. It is most likely the case that the majoirty of the runners place in an average marathon range, and that this starts with many of the runners who are also in the top 2000. 
+
+```{r, echo=FALSE, warning=FALSE}
+hours <- c()
+minutes <- c()
+for (i in 1:nrow(data)) {
+  hour <- (substr(as.character(data[i, "official_time"]), 1, 1))
+  minute <- (substr(as.character(data[i, "official_time"]), 3, 4))
+  hours[i] <- as.numeric(hour)
+  minutes[i] = as.numeric(minute)
+}
+data$hours <- hours
+data$minutes <- minutes
+
+finish_time <- c()
+for (i in 1:nrow(data)) {
+  finish_time[i] <- (data$hour[i] * 60) + data$minutes[i]
+} 
+
+data$finish_min <- finish_time
+
+data <- data %>%
+  arrange(finish_min)
+```
+
+
+```{r, warning=FALSE}
+data_sample <- data[1:2000, ]
+
+ggplot(data_sample, aes(x=age, y=finish_min)) + 
+  scale_fill_gradient(low = "lightblue", high = "blue") +
+  geom_hex() +
+  xlim(20,90) +
+  ylim(100,200) +
+  ylab("Finish Time in Minutes") +
+  xlab("Age") +
+  ggtitle("Finish Time of Top 2000 Runners")
+```
+
+
+
+**Density Plot of Age by Gender**
+
+Finally we plot density curves of the age distribution seperated by gender. We see that the females tend to be younger in comparison to men in the data set. Further questions to be examined are how the finish times differ by gender, and if gender is connected with any of the other variables such as split times and location of origin. 
+
+```{r, warning=FALSE}
+ggplot(data, aes(x=age, color=gender)) + 
+  geom_density() +
+  ggtitle("Density Plot of Age by Gender") + 
+  ylab("Density") +
+  xlab("Age")
+```
+
+

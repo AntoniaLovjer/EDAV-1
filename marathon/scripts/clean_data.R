@@ -19,7 +19,7 @@ add_location <- function(marathon_df){
   cities <- world.cities %>% 
     filter(! name %in% repeated_cities) %>% 
     rename(city = name) %>% 
-    select(city, country.etc)
+    select(city, country.etc, lat, long)
   
   # Split columns (city/state, gender/age) and do basic cleaning on city names
   marathon_df <- marathon_df %>% 
@@ -95,4 +95,8 @@ clean_marathon_data <- function(input_path='../data/raw',
   #return(marathon_clean)
 }
 
+clean_marathon_data(year=2018)
+clean_marathon_data(year=2017)
+clean_marathon_data(year=2016)
+clean_marathon_data(year=2015)
 

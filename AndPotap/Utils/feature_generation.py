@@ -21,7 +21,7 @@ import pandas as pd
 def format_correctly(df, verbose=False):
     """
     Properly formats the DateTime objects and introduces inplace
-    the DateTime objects columns in seconds
+    the DateTime objects columns in unit of time:seconds
     :param df: DataFrame | the marathon DataFrame
     :param verbose: bool | True prints the time the function took
     :return: DataFrame | the original DataFrame with the
@@ -177,8 +177,9 @@ def reshape_properly(df, verbose=False):
     selected = [col for col in df.columns if 'k' in col]
     df_placeholder = pd.melt(frame=aux, id_vars=id_vars,
                              value_vars=selected)
-    df_placeholder.loc[:, 'ID_R'] = (df_placeholder['ID'].apply(str) + '_'
-                                     + df_placeholder['variable'].str.get(-1))
+    df_placeholder.loc[:, 'ID_R'] = \
+        (df_placeholder['ID'].apply(str) + '_'
+         + df_placeholder['variable'].str.get(-1))
 
     # Melt for all the columns
     aux = pd.melt(frame=aux, id_vars=id_vars)

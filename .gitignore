@@ -7,3 +7,6 @@
 .Rproj.user
 /.Rhistory
 /EDAV.Rproj
+/AndPotap/Utils/k_means.py
+/AndPotap/Utils/stochastic_optimization.py
+/AndPotap/Utils/distance.py

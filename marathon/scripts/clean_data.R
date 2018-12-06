@@ -40,12 +40,12 @@ add_location <- function(marathon_df){
 }
 
 
-clean_marathon_data <- function(input_path='../data/raw',
-                                output_path='../data/clean',
+clean_marathon_data <- function(input_path='./AndPotap/DBs',
+                                output_path='./AndPotap/DBs',
                                 year = 2018){
   
   input_filename <- paste0(input_path, '/marathon_', year, '.csv')
-  output_filename <- paste0(output_path, '/marathon_', year, '.csv')
+  output_filename <- paste0(output_path, '/marathon_clean_', year, '.csv')
   # Read Data
   marathon <- read_csv(input_filename)
   

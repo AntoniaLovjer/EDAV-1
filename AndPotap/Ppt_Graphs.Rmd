@@ -1,0 +1,49 @@
+---
+title: "Race Summary"
+author: "Andres Potapczynski (ap3635)"
+date: "12/6/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+```
+
+```{r Files, include=FALSE}
+file_input <- './DBs/marathon_2018_clusters.csv'
+file_output <- './DBs/runner_embedding.png'
+```
+
+
+## Graphs for presentation
+
+I load the data
+```{r Load the data, message=FALSE, warning=FALSE}
+df <- read_csv(file = file_input)
+df$color = 'Fast'
+df$color[df$sec_8 > quantile(df$sec_8, 0.5)] = 'Average'
+df$color[df$sec_8 > quantile(df$sec_8, 0.75)] = 'Slow'
+```
+
+Then make the graphs
+```{r Runners Distribution in 2018, message=FALSE}
+g <- ggplot(data = df, mapping = aes(x = x, y = y)) +
+  geom_point(aes(color=color), alpha = 0.5) +
+  xlab('') +
+  ylab('') + 
+  labs(title = 'Variance increases as performance decreases',
+       subtitle = 'Athlete Embedding by Running Time (2018) - 10% sample') +
+  theme(plot.title = element_text(size = 12, face = "bold")) +
+  theme(plot.subtitle = element_text(size = 10),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.ticks.y=element_blank(),
+        axis.text.y=element_blank())
+g
+ggsave(filename = file_output, plot = g, dpi = 300)
+```
+
+
+

@@ -28,10 +28,10 @@ from AndPotap.Utils.distance import discrepancy_gradient_total_map
 # Files
 # ===========================================================================
 os.chdir('/Users/andpotap/Documents/Columbia/EDAV/EDAV/AndPotap')
-file_input = './DBs/marathon_2018.csv'
-file_output = './DBs/marathon_2018_clusters.csv'
-# file_input = './DBs/marathon_2017.csv'
-# file_output = './DBs/marathon_2017_clusters.csv'
+# file_input = './DBs/marathon_2018.csv'
+# file_output = './DBs/marathon_2018_clusters.csv'
+file_input = './DBs/marathon_2017.csv'
+file_output = './DBs/marathon_2017_clusters.csv'
 # file_input = './DBs/marathon_2016.csv'
 # file_output = './DBs/marathon_2016_clusters.csv'
 # file_input = './DBs/marathon_2015.csv'
@@ -46,8 +46,8 @@ data = data[data['type'] == 'R']
 data = format_correctly(data, verbose=True)
 data = add_diffs(data, verbose=True)
 np.random.seed(seed=37373)
-# data = data[data['sec_8'] < 15000]
-mask = 10000
+data = data[data['sec_8'] < 15000]
+mask = 5000
 mask = np.random.choice(a=data.shape[0], size=mask)
 df = data.reindex(mask).copy()
 # ===========================================================================
@@ -98,5 +98,5 @@ plt.show()
 # ===========================================================================
 df_out.loc[:, 'x'] = x_min[:, 0]
 df_out.loc[:, 'y'] = x_min[:, 1]
-df_out.to_csv(file_output)
+df_out.to_csv(file_output, index=False)
 # ===========================================================================

@@ -178,7 +178,7 @@ def reshape_properly(df, verbose=False):
     df_placeholder = pd.melt(frame=aux, id_vars=id_vars,
                              value_vars=selected)
     df_placeholder.loc[:, 'ID_R'] = (df_placeholder['ID'].apply(str) + '_'
-                          + df_placeholder['variable'].str.get(-1))
+                                     + df_placeholder['variable'].str.get(-1))
 
     # Melt for all the columns
     aux = pd.melt(frame=aux, id_vars=id_vars)

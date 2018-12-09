@@ -12,6 +12,15 @@ server <- function(input, output) {
   input_year <- reactive({input$input_year})
   country <- reactive({input$country})
 
+  output$cityyear <- renderText({
+    if (location() == 'State'){
+      text <- paste(state(), ', USA  -  ', input_year())
+    } else{
+      text <- paste(country(), '  -  ', input_year())
+    }
+    return(text)
+  })
+
   output$total <- renderText({
     if (location() == 'State'){
     total <- marathon %>%
@@ -22,7 +31,7 @@ server <- function(input, output) {
         filter(year == input_year() & country == country()) %>%
         nrow()
     }
-    paste(total, " Finishers in 2018")
+    paste0(prettyNum(total, big.mark = ',')," Total Finishers")
   })
 
   output$runners <- renderValueBox({
@@ -33,7 +42,7 @@ server <- function(input, output) {
       num_runners <- marathon %>%
         filter(year == input_year() & country == country() & type == 'R') %>% nrow()
     }
-    valueBox(num_runners, "Runners", color = "purple")
+    valueBox(prettyNum(num_runners, big.mark = ','), "Runners", color = "purple")
   })
 
   output$wheelchairs <- renderValueBox({
@@ -44,7 +53,7 @@ server <- function(input, output) {
       num_wheelchairs <- marathon %>%
         filter(year == input_year() & country == country() & type == 'W') %>% nrow()
     }
-    valueBox(num_wheelchairs, "Wheelchairs", color = "aqua")
+    valueBox(prettyNum(num_wheelchairs, big.mark = ','), "Wheelchairs", color = "aqua")
   })
 
   output$handcycles <- renderValueBox({

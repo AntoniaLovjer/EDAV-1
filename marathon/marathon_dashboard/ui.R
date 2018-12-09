@@ -53,13 +53,21 @@ sidebar <- dashboardSidebar(
 
 
 frow1 <- fluidRow(
+  box(
+    width = 18,
+    h1(textOutput("cityyear")),
+    h2(textOutput("total"))
+  )
+)
+
+frow2 <- fluidRow(
       valueBoxOutput("runners"),
       valueBoxOutput("wheelchairs"),
       valueBoxOutput("handcycles")
 
 )
 
-frow2 <- fluidRow(
+frow3 <- fluidRow(
 
       box(title = "Distribution of Age By Gender",
         plotOutput("pyramidplot", height = "450px")),
@@ -67,7 +75,7 @@ frow2 <- fluidRow(
         plotOutput("genderRatio", height = "450px"))
 )
 
-frow3 <- fluidRow(
+frow4 <- fluidRow(
   box(title = 'Official time density distribution',
       plotOutput("densityplot", height = "450px")
   ),
@@ -78,7 +86,7 @@ frow3 <- fluidRow(
 )
 
 # combine the two fluid rows to make the body
-body <- dashboardBody(frow1, frow2, frow3)
+body <- dashboardBody(frow1, frow2, frow3, frow4)
 
 #completing the ui part with dashboardPage
 ui <- dashboardPage(title = 'This is my Page title', header, sidebar, body, skin='black')

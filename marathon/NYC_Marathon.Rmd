@@ -9,25 +9,61 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+# 1. Introduction
 
-# 1. Description of Data
+Millions of people run marathons world-wide each year. Marathons help raise money for charities, connect runners around the world, and help people to exercise and lead healthy lives while inspiring others to do the same. Our group chose to analyze the the NYC Marathon Data because this marathon is a unique event which brings together extraordinary, driven people from all over the globe, from all age groups, at different levels of physical ability to push their bodies to the limit. __We were curious to find out who these people were, where they came from but also how this variables influence their performance. Additionally we were interested in understanding how large is the participation of woman relative to men and what is the trend. Finally, we explored how to summarize the whole race in a graph__.  The team consisted of Arthur Herbout, Antonia Lovjer, Andrea Navarrete and Andres Potapczynski. 
 
-## 1.1 Source
-## 1.2 Web Scrapping
-## 1.3 Columns 
+Andrea took on the challenge of scraping the data from the NYC Road Runners website, and cleaning it using an R script which she shard with the rest of the group. The five data sets consisted of the NYC marathon data on race finishers for years 2015 to 2018. Andrea and Antonia continued to do a demographic analysis of the data, working towards understanding who were the people participating in the race. Arthur wanted to understand how the race was organized, and used variables such as "official_time" and "gender" to understand the meaning behind the "waves" and how they correlated with performance. Andres took a more in depth approach to the data by clustering the runners according to their performance in order to analyze patterns amongst the different groups. 
 
-(Assumptions made)
+As a team, we worked on brainstorming ideas for the project, organizing the analysis, completing the exploratory data analysis and visualization, and creating the presentation. Design of the interactive Shiny app was completed as a group, with the development led by Andrea, and contributions by Arthur, Antonia and Andres.
 
-# 2. Cealning Process / Quality
+# 2. Description of data
 
-## 2.1 Mention inconsitencies 
-## 2.2 Messy Location 
-## 2.3 Time
-## 2.4 Outliers
+## 2.1 Source
 
-# 3. Analysis
+Our data set comes from the _TCS New York City Marathon Results_ which is hosted by the New York City Road Runners. We scrapped the data from their official website [link](https://results.nyrr.org/runner/3/result/M2018). Accessing the previous link renders the following view:
+[][Add the png of the view]
 
-## 3.1 Demopgraphic
+Thus, as it can be seen above the information that the website provides falls into two categories.
+
+* __Demographics__: Age, gender and country / city 
+* __Performance metrics__: Official time, pace per mile and the time per 5 kilometer split
+
+The main difficulty with this data is that it is embedded in a web page. Even though it is easily accessible it is hard to download locally! Thus we had figure out how to web scrape it.
+
+## 2.2 Web Scrapping
+
+Web scrapping was more time consuming than we thought. Even though we used the really well-develop package of `BeautifulSoup` it still required us to overcome two main obstacles (1) understanding the web scrapping process and (2) to come up with the template that our program should use in order to find the information.
+
+To get a complete understanding of the process, we made intensive use of different resources online: either YouTube videos or other Q&A websites such as `StackOverflow`. A particular source that we found useful was [link](https://medium.freecodecamp.org/how-to-scrape-websites-with-python-and-beautifulsoup-5946935d93fe). Moreover we became acquainted with the myriad of details that were not evident when we started the process. First, we had to distribute our work in a computer engine on the cloud. The difficulty is that web scrapping is a really slow process. For example, we have to run a long `for-loop` were we have to make a different connection for each of the over 50 K participants of the marathon (this times the number of year that we downloaded). Moreover, we cannot make a constant connection to the web site since that could potentially be considered as an attack. Thus we had to replicate the pace that a person takes to access the website. Thus we had to set-up the computer engine and let it do the work (which took approximately 3 days)
+
+In term of coming up with a template for our program to run. We had to learn (actually before starting D3) how to read all the html elements of a web page and embed that knowledge into a script for `BeautifulSoup` to perform its magic. Furthermore, this is a sensitive procedure. Altering any location of an element in the web page renders the script useless. Thus, on the one hand, we had to make several "robustness checks" for our script before letting it run (because we risk losing days of work). On the other hand, we had to develop for each year a new template! Every year the layout was altered in some particular way, thus we had to adapt for those changes. However, we were still able to download the same information every year (which made the template creating process slightly more exciting).
+
+At the end, we were quite happy that we were able to download the data. Mostly because we were doing an analysis that excited us but also because, due to the difficulty of the process, we knew that not many people had done this analysis before. 
+
+# 3. Analysis of data quality
+
+Due to the web scrapping procedure we were afraid that the data would have a bunch of errors, but actually it did not. Nonetheless, we found inconsistencies in mainly XXX fronts.
+
+## 3.1 Messy Locations
+
+Sometimes the geographical information displayed in the webpage related to the city of the runner, sometimes to the her state and some others times to the county she was was born (definitely our web scrapping program was not so smart as to make those types of swaps). Then we had to make a decision on what to do about this: either to spend quite some time on mapping manually all the cases or do some kind of parsing and leave aside the cases without a match. 
+
+A priori we were unsure what to do, we had mixed feeling about not using this information, which was a key variable for our analysis. Hence to make a decision first we assessed how bad our problem was. For this we ran our parsing procedure to see how many cases lack a match. Our parsing procedure consisted on two steps: first, we would try to parse the states and for the remaining we would pass our country mapping (which was tractable). Fortunately, we got quite lucky and the procedure almost mapped completely off-the-shelve. The reason is that the majority of the inputs that had a state name in the geographical location where from the USA and also because the R function `state.abb` was quite robust and it allowed us to get the state abbreviations. Therefore, we left the rest of the cases as NA and move on into adding the latitude and longitude of the place.
+
+## 3.2 Time format
+
+We have never had a good experience when working with a time series data sets and this was, unfortunately, not the exception. We made extensive use of the available tools to go from formats like "01:00:23" to an actual meaningful time stamp (on this, it appears as if rather than spreading the best practices of presenting time variables in a data set, the world is rather creating more sophisticated tools to go over every eventuality).
+
+The previous discussed problem was multiplied by all the columns that contained time data which was quite a few: the finished time, the time per 5 k split, the official time and many more. Thus after running our parsing function on each column we filtered out any observation that had at least one missing value (that is, not a parsable time) in any of the main variables such as `gun_time`, `official_time`, and each of the splits `split_<x>k`. We lost a few entries but it was less that XXX% of the data.
+
+## 3.4 Outliers
+
+Outliers can be mostly 
+
+# 4. Main analysis
+
+## 4.1 Demographic
 
 (over time)
 
@@ -36,21 +72,26 @@ knitr::opts_chunk$set(echo = TRUE)
 * Location
 * Teams (ranks)
 
-## 3.2 Running Variables
+## 4.2 Running Variables
 
 * Strategy (clusters)
 * Waves
 
-## 3.3 Perfomance
+## 4.3 Summarizing the whole race in a graph
 
-* Over time
-* waves
+# 5. Executive Summary
+[][Write the conclusion]
 
+# 6. Interactive component
+[][Add the link to the interactive component]
+[][Explain how to use the visualization. What to move, what to look for, etc]
 
+# 7. Conclusion
+[][Discuss limitations, lessons learned and future directions]
 
 # Questions
 
 1. Is gender a significant indicator of performance? (Arthur)
-2. What are the running strategies? What is their impact? (Andres)
+2. How could we summarize the whole race in a graph? (Andres)
 3. How has the gender ratio changed over time? (Andrea & Antonia)
 4. How do performance change by location? (Andrea & Antonia)

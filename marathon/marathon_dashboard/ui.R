@@ -1,6 +1,7 @@
 # load the required packages
 library(shiny)
-require(shinydashboard)
+library(shinydashboard)
+library(shinyWidgets)
 library(ggplot2)
 library(dplyr)
 
@@ -8,39 +9,67 @@ library(dplyr)
 #Dashboard header carrying the title of the dashboard
 header <- dashboardHeader(title = "NYC Marathon")
 
+marathon <- read_csv('../data/clean/marathon.csv')
+countries <- marathon %>% select(country) %>%
+              group_by(country) %>%
+              mutate(n = n()) %>% ungroup() %>%
+        filter(!is.na(country) & n > 10) %>%
+        distinct() %>%
+        arrange(country) %>%
+        flatten_chr()
+
 #Sidebar content of the dashboard
 sidebar <- dashboardSidebar(
+  width = 200,
   sidebarMenu(
-    menuItem("States", #icon = icon("bar-chart-o"),
-             # Input directly under menuItem
-             selectInput('state', 'Select a state', c(Choose='', state.name), selectize=FALSE)
-          ),
-    menuItem("Countries", #icon = icon("bar-chart-o"),
-             # Input directly under menuItem
-             selectInput('country', 'Select a state', c(Choose='', state.name), selectize=FALSE)
+
+    radioGroupButtons(inputId = "input_year",
+                         label = "Select a Year",
+                         choices = c(2015, 2016, 2017, 2018),
+                         size = 'sm',
+                         selected = 2018, status='primary',
+                         justified = TRUE),
+    radioGroupButtons(inputId = 'loc',
+                      label = 'By',
+                      choices = c('State', 'Country'),
+                      justified = TRUE),
+    conditionalPanel(
+      pickerInput(inputId = "state",
+                label = "States",
+                choices = state.name,
+                selected = 'New York',
+                options = list(`live-search` = TRUE)),
+      condition = "input.loc == 'State'"),
+    conditionalPanel(
+    pickerInput(inputId = "country",
+                label = "Countries",
+                choices = countries,
+                selected = 'USA',
+                options = list(`live-search` = TRUE)),
+    condition = "input.loc == 'Country'")
     )
-    ))
+    )
+
+
 
 frow1 <- fluidRow(
-  box(
-    width = 12,
-    h2(textOutput("total")),
-    h3(textOutput("totalsby"))
-  )
+      valueBoxOutput("runners"),
+      valueBoxOutput("wheelchairs"),
+      valueBoxOutput("handcycles")
+
 )
 
 frow2 <- fluidRow(
-  box(title = "Distribution of Age By Gender",
-      plotOutput("pyramidplot", height = "400px")
-  ),
-  box(title = "Ratio of woman and men by state",
-  plotOutput("genderRatio", height = "400px")
-  )
+
+      box(title = "Distribution of Age By Gender",
+        plotOutput("pyramidplot", height = "450px")),
+      box(title = "Ratio of woman and men by state",
+        plotOutput("genderRatio", height = "450px"))
 )
 
 frow3 <- fluidRow(
   box(title = 'Official time density distribution',
-      plotOutput("densityplot", height = "400px")
+      plotOutput("densityplot", height = "450px")
   ),
   box(
     #title = 'Official time density distribution',
@@ -48,9 +77,8 @@ frow3 <- fluidRow(
   )
 )
 
-
 # combine the two fluid rows to make the body
 body <- dashboardBody(frow1, frow2, frow3)
 
 #completing the ui part with dashboardPage
-ui <- dashboardPage(title = 'This is my Page title', header, sidebar, body, skin='red')
+ui <- dashboardPage(title = 'This is my Page title', header, sidebar, body, skin='black')

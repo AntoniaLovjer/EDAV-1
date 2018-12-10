@@ -4,12 +4,13 @@ library(shinydashboard)
 library(shinyWidgets)
 library(ggplot2)
 library(dplyr)
+library(tidyverse)
 
 
 #Dashboard header carrying the title of the dashboard
 header <- dashboardHeader(title = "NYC Marathon")
 
-marathon <- read_csv('../data/clean/marathon.csv')
+marathon <- read_csv('marathon.csv')
 countries <- marathon %>% select(country) %>%
               group_by(country) %>%
               mutate(n = n()) %>% ungroup() %>%
@@ -71,7 +72,7 @@ frow3 <- fluidRow(
 
       box(title = "Distribution of Age By Gender",
         plotOutput("pyramidplot", height = "450px")),
-      box(title = "Ratio of woman and men by state",
+      box(title = "Proportion of woman and men by location",
         plotOutput("genderRatio", height = "450px"))
 )
 
@@ -80,8 +81,8 @@ frow4 <- fluidRow(
       plotOutput("densityplot", height = "450px")
   ),
   box(
-    #title = 'Official time density distribution',
-     # plotOutput("pyramidplot", height = "400px")
+    title = 'Performance between athletes widens as race advances',
+    plotOutput("boxplot", height = "450px")
   )
 )
 

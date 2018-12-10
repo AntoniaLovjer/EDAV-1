@@ -1,10 +1,8 @@
-library(tidyverse)
-
 # create the server functions for the dashboard
 server <- function(input, output) {
 
   # Read Data
-  #marathon <- read_csv('../data/clean/marathon.csv')
+  marathon <- read_csv('marathon.csv')
   source('aux_functions.R')
   # Read inputs
   location <- reactive({input$loc})
@@ -95,6 +93,14 @@ server <- function(input, output) {
     }
   })
 
+  output$boxplot <- renderPlot({
+    if (location() == 'State'){
+      splint_boxplot(marathon, 1, state(), input_year())
+    }
+    else {
+      splint_boxplot(marathon, 0, country(), input_year())
+    }
+  })
 }
 
 

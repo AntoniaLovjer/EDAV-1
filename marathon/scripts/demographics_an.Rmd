@@ -1,0 +1,365 @@
+---
+title: "Untitled"
+author: "Andrea Navarrete"
+date: "11/27/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+
+```{r cars}
+library(tidyverse)
+
+marathon <- read_csv('../data/clean/marathon.csv')
+```
+
+## Including Plots
+
+
+```{r pressure, echo=FALSE}
+glimpse(marathon)
+```
+
+## Basic Demographics
+
+### Gender
+
+```{r}
+marathon %>% 
+  filter(!is.na(gender)) %>% 
+  group_by(year) %>% 
+  summarise(F = sum(gender == 'F') / n(),
+            M = sum(gender == 'M') / n())
+
+marathon %>% 
+  filter(!is.na(gender)) %>% 
+  group_by(year, type) %>% 
+  summarise(F = sum(gender == 'F') / n(),
+            M = sum(gender == 'M') / n())
+```
+
+### Location
+
+How many we have location?
+```{r}
+marathon %>% 
+  group_by(year) %>% 
+  summarise(n = sum((!is.na(country))/ n()))
+```
+
+Cities without country
+```{r}
+without_country <- marathon %>% 
+  filter(is.na(country)) %>% 
+  group_by(city) %>% 
+  summarise(n = n()) %>% 
+  arrange(desc(n)) 
+```
+
+
+Overall
+```{r}
+overall_loc <- marathon %>% 
+  filter(!is.na(country) & type == 'R') %>% 
+  group_by(year) %>% 
+  summarise(local = sum(state == 'NY', na.rm = TRUE) / n(),
+            national = sum(!is.na(state) & state != 'NY' & country == 'USA') / n(),
+            international = sum(country != 'USA') / n()) %>% 
+  ungroup() %>% 
+  mutate(year = factor(year))
+overall_loc
+```
+
+```{r}
+marathon %>% 
+  filter(!is.na(country) & type == 'R' & year == 2018) %>%
+  group_by(year) %>%
+  mutate(location_type = ifelse(country != 'USA', 'international',
+                            ifelse(state == 'NY', 'local',
+                                'national')),
+         location_type = factor(location_type, levels=c('local','national','international'))) %>% 
+  filter(!is.na(location_type)) %>% 
+  ggplot(aes(x=location_type)) + geom_bar(aes(y = (..count..)/sum(..count..))) +
+  scale_y_continuous(labels = function(x) paste0(x*100, "%")) + 
+    theme_minimal(16) + 
+    theme(
+    panel.grid.major.x=element_blank(),
+    panel.background = element_blank(), #element_rect(fill = "white", colour = "lightgray"),
+    panel.grid.major.y = element_blank(), #= element_line(linetype=3, color="lightgray", size=0.4),
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank()
+  )
+```
+
+
+For nationals:
+```{r}
+levels_state <- marathon %>% 
+          filter(!is.na(state_name) & country == 'USA' & state != 'NY' & year == 2018) %>% 
+          group_by(state_name) %>% summarise(n=n()) %>% 
+          arrange(n) %>% 
+  select(state_name) %>% flatten_chr()
+
+levels_state
+
+total <- marathon %>% 
+  filter(!is.na(state_name) & country == 'USA' & state != 'NY' & year == 2018) %>% 
+  mutate(state_name =  factor(state_name, levels = levels_state)) %>% 
+  nrow()
+
+marathon %>% 
+  filter(!is.na(state_name) & country == 'USA' & state != 'NY') %>% 
+  mutate(state_name =  factor(state_name, levels = levels_state)) %>%
+  group_by(year, state_name, type) %>% 
+  summarise(count = n() / total) %>% 
+  filter(type=='R' & year == 2018) %>% 
+  arrange(desc(count)) %>% 
+  head(15) %>% 
+  ggplot(aes(x=state_name, y=count)) + 
+  geom_bar(stat = 'identity', position = position_dodge(), fill = "#5b8124") + 
+  coord_flip() +
+  scale_y_continuous(labels = function(x) paste0(x*100, "%")) + 
+  theme_minimal(24) + 
+    theme(
+    panel.grid.major.x=element_blank(),
+    panel.background = element_blank(), #element_rect(fill = "white", colour = "lightgray"),
+    panel.grid.major.y = element_blank(), #= element_line(linetype=3, color="lightgray", size=0.4), axis.text.y = element_text(size=rel(0.7)),
+  axis.title.y = element_blank(),
+  axis.title.x = element_blank()
+  )
+
+#ggsave('../plots/states_2018.png')
+
+```
+
+```{r}
+levels_country <- marathon %>% 
+          filter(!is.na(country) & country != 'USA' & year == 2018) %>% 
+          group_by(country) %>% summarise(n=n()) %>% 
+          arrange(n) %>% 
+  select(country) %>% flatten_chr()
+
+levels_country
+
+total <- marathon %>% 
+  filter(!is.na(country) & country != 'USA' & year == 2018) %>% 
+  mutate(country=  factor(country, levels = levels_country)) %>% 
+  nrow()
+
+marathon %>% 
+  filter(!is.na(country) & country != 'USA' & year == 2018) %>% 
+  mutate(country =  factor(country, levels = levels_country)) %>%
+  group_by(year, country, type) %>% 
+  summarise(count = n() / total) %>% 
+  filter(type=='R' & year == 2018) %>% 
+  arrange(desc(count)) %>% 
+  head(15) %>% 
+  ggplot(aes(x=country, y=count)) + 
+  geom_bar(stat = "identity", position = position_dodge(), fill = "#5b8124") +
+  coord_flip() +
+  scale_y_continuous(labels = function(x) paste0(x*100, "%")) + 
+  theme_minimal(24) + 
+    theme(
+    panel.grid.major.x=element_blank(),
+    panel.background = element_blank(), #element_rect(fill = "white", colour = "lightgray"),
+    panel.grid.major.y = element_blank(), #= element_line(linetype=3, color="lightgray", size=0.4), axis.text.y = element_text(size=rel(0.7)),
+  axis.title.y = element_blank(),
+  axis.title.x = element_blank()
+  )
+
+#ggsave('../plots/countries_2018.png')
+```
+
+
+## Top runners
+
+```{r}
+total <- 10
+marathon %>% 
+  filter(type == 'R' & year == 2018) %>% 
+  arrange(official_time) %>% head(total) %>% 
+  group_by(year, country, type) %>% 
+  summarise(count = n()) %>% 
+  filter(type=='R' & year == 2018) %>% 
+  arrange(desc(count)) %>% 
+  head(15) %>% 
+  ggplot(aes(x=fct_reorder(country, count, .desc=FALSE), y=count)) + 
+  geom_bar(stat = "identity", position = position_dodge(), fill = '#bad744') +
+  coord_flip() +
+  #scale_y_continuous(labels = function(x) paste0(x*100, "%")) + 
+  theme_minimal(24) + 
+    theme(
+    panel.grid.major.x=element_blank(),
+    panel.background = element_blank(), #element_rect(fill = "white", colour = "lightgray"),
+    panel.grid.major.y = element_blank(), #= element_line(linetype=3, color="lightgray", size=0.4), axis.text.y = element_text(size=rel(0.7)),
+  axis.title.y = element_blank(),
+  axis.title.x = element_blank()
+  )
+#ggsave('../plots/top_countries_2018.png')
+```
+
+
+
+### Women Ratio
+
+
+```{r}
+marathon %>% 
+  filter(!is.na(gender)) %>% 
+  group_by(year, type) %>% 
+  summarise(F = sum(gender=='F'),
+            M = sum(gender=='M'),
+            ratio = F/M)
+```
+
+
+```{r}
+marathon %>% 
+  filter(type == 'R' & year == 2018) %>% 
+  filter(country != 'NA') %>% 
+  group_by(country, year) %>% 
+  summarise(n = n(),
+            num_male = sum(gender == 'M', na.rm=TRUE),
+            num_female = sum(gender == 'F', na.rm=TRUE),
+            ratio_gender = num_female / num_male,
+            more_woman = ratio_gender > 1) %>% 
+  filter(n > 50) %>% 
+  arrange(desc(ratio_gender)) %>% 
+  ggplot(aes(x = ratio_gender,
+             y = fct_reorder2(country, year ==2018, ratio_gender, .desc=FALSE),
+             color = more_woman)) +
+geom_point(size=5) +
+   scale_color_manual(values=c("lightblue", "midnightblue")) + 
+  geom_vline(xintercept=1, color='midnightblue', size=0.1) + 
+  ggtitle("Ratio of woman and men by Country") +
+    theme(
+    panel.grid.major.x=element_line(size=0.05),
+    panel.background = element_blank(), #element_rect(fill = "white", colour = "lightgray"),
+    panel.grid.major.y = element_line(linetype=3, color="lightgray", size=0.6), axis.text.y = element_text(size=rel(1.3)),
+  axis.title.y = element_blank(),
+  axis.title.x = element_blank(),
+  legend.position="none"
+  )
+
+#ggsave('../plots/ratio_country.png')
+```
+
+By national
+```{r}
+marathon %>% 
+  filter(type == 'R') %>%
+  filter(state_name != 'NA') %>% 
+  group_by(state_name, year) %>% 
+  summarise(n = n(),
+            num_male = sum(gender == 'M', na.rm=TRUE),
+            num_female = sum(gender == 'F', na.rm=TRUE),
+            ratio_gender = num_female / num_male,
+            more_woman = ratio_gender > 1) %>% 
+  filter(n > 50 & year == 2018) %>% 
+  arrange(desc(ratio_gender)) %>% 
+  ggplot(aes(x = ratio_gender, 
+             y = fct_reorder2(state_name, year ==2018, ratio_gender, .desc=FALSE),
+             color = more_woman
+             )) +
+  geom_point(size=4) +
+  scale_color_manual(values=c("lightblue", "midnightblue")) + #, color='#853785') +
+  geom_vline(xintercept=1, color='midnightblue', size=0.1) + 
+  ggtitle("Ratio of woman and men by state") +
+    theme(
+    panel.grid.major.x=element_line(size=0.05),
+     panel.background = element_blank(),
+    panel.grid.major.y = element_line(linetype=3, color="lightgray", size=0.6), axis.text.y = element_text(size=rel(1.3)),
+  axis.title.y = element_blank(),
+  axis.title.x = element_blank(),
+  legend.position="none"
+  )
+
+#ggsave('../plots/ratio_state.png')
+```
+
+
+```{r}
+library(ggalt)
+marathon %>% 
+  filter(type == 'R' & state_name != 'NA') %>%
+  mutate(year = paste0('i', as.character(year))) %>% 
+  group_by(state_name, year) %>% 
+  summarise(n = n(),
+            num_male = sum(gender == 'M', na.rm=TRUE),
+            num_female = sum(gender == 'F', na.rm=TRUE),
+            ratio_gender = num_female / num_male) %>% 
+  filter(n > 50) %>% 
+  select(state_name, ratio_gender, year) %>% 
+  spread(year, ratio_gender) %>% 
+  mutate(change = i2018 - i2016,
+         per_change = (i2018 - i2016) / i2016) %>% 
+  filter(!is.na(i2018) & !is.na(i2016)) %>% 
+  ggplot(aes(x=0, xend=per_change, y=fct_reorder(state_name, per_change, .desc=FALSE),
+             Group=state_name)) + 
+  #geom_point(size=0.7) +
+  geom_dumbbell(color="#e3e2e1", 
+                size=2.5,
+                colour_x = "#bad744",
+                colour_xend = "#5b8124") +
+  ggtitle("Ratio of woman and men by state") +
+  scale_x_continuous(labels = function(x) paste0(x*100, "%")) + 
+  theme(
+    panel.grid.major.x=element_line(size=0.05),
+    panel.background = element_blank(),
+    panel.grid.major.y = element_line(linetype=3, color="lightgray", size=0.4), axis.text.y = element_text(size=rel(1.3)),
+  axis.title.y = element_blank(),
+  axis.title.x = element_blank()
+  )
+
+#ggsave('../plots/ratio_change_state.png')
+```
+
+```{r}
+marathon %>% 
+  filter(type == 'R') %>% 
+  filter(country != 'NA') %>% 
+  mutate(year = paste0('i', as.character(year))) %>% 
+  group_by(country, year) %>% 
+  summarise(n = n(),
+            num_male = sum(gender == 'M', na.rm=TRUE),
+            num_female = sum(gender == 'F', na.rm=TRUE),
+            ratio_gender = num_female / num_male) %>% 
+  filter(n > 50) %>% 
+  select(country, ratio_gender, year) %>% 
+  spread(year, ratio_gender) %>% 
+  mutate(change = i2018 - i2016,
+         per_change =  (i2018 - i2016) / i2016) %>% 
+  filter(!is.na(i2018) & !is.na(i2016)) %>% 
+  ggplot(aes(x=0, xend=per_change, y=fct_reorder(country, per_change, .desc=FALSE),
+             Group=country)) + 
+  geom_dumbbell(color="#e3e2e1", 
+                size=2.5,
+                colour_x = "#bad744",
+                colour_xend = "#5b8124") +
+  ggtitle("Ratio of woman and men by Country") +
+  scale_x_continuous(labels = function(x) paste0(x*100, "%")) + 
+  theme(
+    panel.grid.major.x=element_line(size=0.05),
+    panel.background = element_blank(),
+    panel.grid.major.y = element_line(linetype=3, color="lightgray", size=0.4), axis.text.y = element_text(size=rel(1.3)),
+  axis.title.y = element_blank(),
+  axis.title.x = element_blank()
+  )
+
+
+theme(
+  axis.title.y = element_blank(),
+  axis.title.x = element_blank()
+  )
+
+#ggsave('../plots/ratio_change_country.png')
+```
+
+
+

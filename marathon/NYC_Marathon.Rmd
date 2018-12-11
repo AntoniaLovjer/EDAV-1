@@ -123,7 +123,7 @@ From a first glance, we notice that the distribution of the data appears to have
 
 Overall, there are more younger people finishing the race in comparison to older people, with a large portion of the participants between the age of 30 and 50. 
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 marathon$year <- factor(marathon$year)
 
 ggplot(marathon, aes(x=age, color=year)) + 
@@ -153,10 +153,7 @@ It is interesting to see that the distributions seem very similar across the two
 
 
 ```{r}
-# names(marathon)[names(marathon) == 'gender'] <- 'Gender'
-
-# marathon$age_factor <- as.factor(marathon$age)
-marathon$age_factor <- marathon$age
+marathon$age_factor <-marathon$age
 
 g3 <- ggplot(marathon, aes(x = age_factor, fill = gender)) + 
   geom_bar(data = subset(marathon, gender == "F"), binwidth =2) + 
@@ -178,7 +175,6 @@ g3 <- ggplot(marathon, aes(x = age_factor, fill = gender)) +
   # theme(axis.title=element_text(size=14))
 g3
 ```
-
 
 We can also examine this data in the form of a mosaic plot. Is is more clear from this plot that there are more men in the race than there are women. One of the benefits of a mosaic plot is that relative proportions between different categories are easier to determine, but one of the downsides is that distributions cannot be determined. 
 
@@ -516,8 +512,6 @@ marathon %>%
   )
 #ggsave('../plots/top_countries_2018.png')
 ```
-
-
 
 ### Women Ratio
 
@@ -857,13 +851,147 @@ Our analysis of the NYC Marathon data focused on answering the following questio
 
 Next, we provide an answer to each of the previous questions.
 
-1. In terms of location, we find that athletes mostly come from the US (over 70%) and the rest are international. On the right hand side we see the top ten states in the left the top ten countries. We were not surprised to see NJ and CA in the top (the former due to geographical closeness and latter for the well-known healthy trend). Yet, we were surprised to see that Italy and France were so represented. In terms of age and gender. We found that the majority of the participants are young adults around 40 years old and that, on average, female athletes tend to be younger. Also, we say that as age increases the number of female participants decreases. 
+\vspace{6pt}
 
-```{r Two Pannel Plot, fig.height=2}
+1. In terms of location, __we find that athletes mostly come from the US (over 70%) and the rest are international__. On the right hand side we see the top ten states in the left the top ten countries. We were not surprised to see NJ and CA in the top (the former due to geographical closeness and latter for the well-known healthy trend). Yet, we were surprised to see that Italy and France were so represented. In terms of age and gender, __we found that the majority of the participants are young adults around 40 years old and that, on average, female athletes tend to be younger__. Also, we say that as age increases the number of female participants decreases. 
+
+\vspace{6pt}
+
+```{r Two Pannel Plot, fig.height=3, echo=FALSE, warning=FALSE, message=FALSE}
+g0 <- ggplot(a0, aes(x=location_type)) + 
+  geom_bar(aes(y = (..count..)/sum(..count..))) +
+  scale_y_continuous(labels = function(x) paste0(x*100, "%")) + 
+    theme_minimal(16) + 
+    theme(
+    panel.grid.major.x=element_blank(),
+    panel.background = element_blank(),
+    panel.grid.major.y = element_blank(),
+    axis.title.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.text.y = element_text(size = 8),
+    axis.text.x = element_text(size = 8)
+  )
+g3 <- ggplot(marathon, aes(x = age_factor, fill = gender)) + 
+  geom_bar(data = subset(marathon, gender == "F"), binwidth =2) + 
+  geom_bar(data = subset(marathon, gender == "M"), binwidth =2, aes(y=..count..*(-1))) +
+  scale_y_continuous(breaks = seq(-5000, 5000, 100), 
+                     labels=abs(seq(-5000, 5000, 100))) + 
+  scale_fill_manual(values = c("darkorange1", 
+    "royalblue2")) + 
+  coord_flip() + 
+  theme_bw() + 
+  ggtitle('Distribution of Age by Gender') +
+  xlab("Count") +
+  ylab("Age") + 
+  theme(axis.title.x = element_blank(), 
+        axis.line.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        title = element_text(size = 8))
 gridExtra::grid.arrange(g0, g3, ncol=2)
 ```
 
-2. We found that the gender ratio 
+\vspace{6pt}
+
+2. We found that the gender ratio is generally low and that only 3 countries are above 0.8 (women / men). Nonetheless, in the majority of the US states have an above 1 ratio. Please see section [XXX] for the full decomposition of each graph.
+
+\vspace{6pt}
+
+```{r Gender ratio, fig.height=3, echo=FALSE, warning=FALSE, message=FALSE}
+df3 <- marathon %>% 
+  filter(type == 'R') %>%
+  filter(state_name != 'NA') %>% 
+  group_by(state_name, year) %>% 
+  summarise(n = n(),
+            num_male = sum(gender == 'M', na.rm=TRUE),
+            num_female = sum(gender == 'F', na.rm=TRUE),
+            ratio_gender = num_female / num_male,
+            more_woman = ratio_gender > 1) %>% 
+  filter(n > 50 & year == 2018) %>% 
+  arrange(desc(ratio_gender))
+df3$over_60 = '< 1'
+df3$over_60[df3$ratio_gender > 1] = '[1, 1.25]'
+df3$over_60[df3$ratio_gender > 1.25] = '> 1.25'
+df3$over_60 <- factor(df3$over_60, levels = c('< 1', '[1, 1.25]', '> 1.25'))
+df3 <- df3 %>% group_by(over_60) %>% 
+  summarize(count = n())
+
+gender3 <- ggplot(data = df3, aes(x = over_60, y = count)) +
+  geom_col() +
+  labs(title = '...',
+       subtitle = 'Women / men') +
+  ylab('States') +
+  xlab('') +
+  theme(plot.title = element_text(size = 8, face = "bold")) +
+  theme(plot.subtitle = element_text(size = 8)) +
+  coord_flip()
+
+df4 <- marathon %>% 
+  filter(type == 'R' & year == 2018) %>% 
+  filter(country != 'NA') %>% 
+  group_by(country, year) %>% 
+  summarise(n = n(),
+            num_male = sum(gender == 'M', na.rm=TRUE),
+            num_female = sum(gender == 'F', na.rm=TRUE),
+            ratio_gender = num_female / num_male,
+            more_woman = ratio_gender > 1) %>% 
+  filter(n > 50) %>% 
+  arrange(desc(ratio_gender))
+
+df4$over_60 = '< 0.5'
+df4$over_60[df4$ratio_gender > 0.5] = '[0.5, 0.75]'
+df4$over_60[df4$ratio_gender > 0.75] = '> 0.75'
+df4$over_60 <- factor(df4$over_60, levels = c('< 0.5', '[0.5, 0.75]', '> 0.75'))
+df4 <- df4 %>% group_by(over_60) %>% 
+  summarize(count = n())
+
+gender4 <- ggplot(data = df4, aes(x = over_60, y = count)) +
+  geom_col() +
+  labs(title = '...',
+       subtitle = 'Women / men') +
+  ylab('Contries') +
+  xlab('') +
+  theme(plot.title = element_text(size = 8, face = "bold")) +
+  theme(plot.subtitle = element_text(size = 8)) +
+  coord_flip()
+
+gridExtra::grid.arrange(gender4, gender3, ncol=2)
+```
+
+\vspace{6pt}
+
+3. We found that the difference in performance between women and men is only observed in groups that rely on more capacity (for full details see section XXX).
+
+\vspace{6pt}
+
+```{r echo=FALSE, fig.height=3}
+median15 <- r15 %>%  filter(gender != 'NA') %>%
+  group_by(wave, gender) %>% 
+  summarize(med_time = median(official_time)) %>% 
+  spread(key = gender, value = med_time) %>% 
+  mutate(diff = as.numeric((F - M)) / 60)
+
+wave1 <- ggplot(data = median15, aes(x = wave, y = diff)) +
+  geom_col() +
+  coord_flip()
+
+wvsm <- marathon %>% filter(gender != 'NA', year == 2018)
+
+wave2 <- ggplot(data = wvsm, aes(x = factor(gender, levels = unique(gender)) , y = official_time)) +
+  geom_boxplot(fill = "royalblue2", outlier.colour = "darkorange1") + 
+  ylab("Official Time") +
+  xlab("Year") +
+  ggtitle("Each year, men perform better than women as a whole") +
+  theme(plot.title = element_text(hjust = 0.5, size=15)) +
+  theme_bw()
+
+gridExtra::grid.arrange(wave2, wave1, ncol=2)
+```
+
+\vspace{6pt}
+
+4. Finally, __we saw that we could summarize the whole race by using an embedding__. This embedding allowed us to visualize (1) how close the race was by looking at the distance between points, (2) what is the variance of the data set by looking at the spread on the y-axis, (3) if odd events happended by noticing the dots that were apart from their closest group. See section XXX for all the details
+
 
 \newpage
 

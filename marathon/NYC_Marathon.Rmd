@@ -10,6 +10,7 @@ library(ggplot2)
 library(grid)
 library(lubridate)
 library(ggalt)
+library(gridExtra)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -157,7 +158,7 @@ It is interesting to see that the distributions seem very similar across the two
 # marathon$age_factor <- as.factor(marathon$age)
 marathon$age_factor <- marathon$age
 
-ggplot(marathon, aes(x = age_factor, fill = gender)) + 
+g3 <- ggplot(marathon, aes(x = age_factor, fill = gender)) + 
   geom_bar(data = subset(marathon, gender == "F"), binwidth =2) + 
   geom_bar(data = subset(marathon, gender == "M"), binwidth =2, aes(y=..count..*(-1))) +
   scale_y_continuous(breaks = seq(-5000, 5000, 100), 
@@ -175,6 +176,7 @@ ggplot(marathon, aes(x = age_factor, fill = gender)) +
         axis.ticks.x = element_blank())
   # theme(plot.title = element_text(hjust = 0.5, size = 15) ) +
   # theme(axis.title=element_text(size=14))
+g3
 ```
 
 
@@ -195,7 +197,7 @@ marathon$agecat[marathon$age > 85 & marathon$age <= 95] <- "[85,95]"
 
 ```{r message=FALSE, warning=FALSE}
 cols <- c("lightgreen", "skyblue")
-vcd::doubledecker(gender ~ agecat,
+g4 <- vcd::doubledecker(gender ~ agecat,
                   data = marathon,
                   spacing_args = list(start =0.3, rate = 1.5),
                   gp = gpar(fill=cols),
@@ -384,15 +386,16 @@ overall_loc
 ```
 
 ```{r}
-marathon %>% 
+a0 <- marathon %>% 
   filter(!is.na(country) & type == 'R' & year == 2018) %>%
   group_by(year) %>%
   mutate(location_type = ifelse(country != 'USA', 'international',
                             ifelse(state == 'NY', 'local',
                                 'national')),
          location_type = factor(location_type, levels=c('local','national','international'))) %>% 
-  filter(!is.na(location_type)) %>% 
-  ggplot(aes(x=location_type)) + geom_bar(aes(y = (..count..)/sum(..count..))) +
+  filter(!is.na(location_type))
+
+g0 <- ggplot(a0, aes(x=location_type)) + geom_bar(aes(y = (..count..)/sum(..count..))) +
   scale_y_continuous(labels = function(x) paste0(x*100, "%")) + 
     theme_minimal(16) + 
     theme(
@@ -402,6 +405,7 @@ marathon %>%
     axis.title.y = element_blank(),
     axis.title.x = element_blank()
   )
+g0
 ```
 
 
@@ -413,22 +417,24 @@ levels_state <- marathon %>%
           arrange(n) %>% 
   select(state_name) %>% flatten_chr()
 
-levels_state
+# levels_state
 
-total <- marathon %>% 
-  filter(!is.na(state_name) & country == 'USA' & state != 'NY' & year == 2018) %>% 
-  mutate(state_name =  factor(state_name, levels = levels_state)) %>% 
+total <- marathon %>%
+  filter(!is.na(state_name) & country == 'USA' & state != 'NY' & year == 2018) %>%
+  mutate(state_name =  factor(state_name, levels = levels_state)) %>%
   nrow()
 
-marathon %>% 
+a <- marathon %>% 
   filter(!is.na(state_name) & country == 'USA' & state != 'NY') %>% 
   mutate(state_name =  factor(state_name, levels = levels_state)) %>%
   group_by(year, state_name, type) %>% 
   summarise(count = n() / total) %>% 
   filter(type=='R' & year == 2018) %>% 
   arrange(desc(count)) %>% 
-  head(15) %>% 
-  ggplot(aes(x=state_name, y=count)) + 
+  head(15)
+
+
+g1 <- ggplot(a, aes(x=state_name, y=count)) + 
   geom_bar(stat = 'identity', position = position_dodge(), fill = "#5b8124") + 
   coord_flip() +
   scale_y_continuous(labels = function(x) paste0(x*100, "%")) + 
@@ -438,9 +444,8 @@ marathon %>%
     panel.background = element_blank(), #element_rect(fill = "white", colour = "lightgray"),
     panel.grid.major.y = element_blank(), #= element_line(linetype=3, color="lightgray", size=0.4), axis.text.y = element_text(size=rel(0.7)),
   axis.title.y = element_blank(),
-  axis.title.x = element_blank()
-  )
-
+  axis.title.x = element_blank())
+g1
 #ggsave('../plots/states_2018.png')
 
 ```
@@ -452,22 +457,23 @@ levels_country <- marathon %>%
           arrange(n) %>% 
   select(country) %>% flatten_chr()
 
-levels_country
+# levels_country
 
 total <- marathon %>% 
   filter(!is.na(country) & country != 'USA' & year == 2018) %>% 
   mutate(country=  factor(country, levels = levels_country)) %>% 
   nrow()
 
-marathon %>% 
+a2 <- marathon %>% 
   filter(!is.na(country) & country != 'USA' & year == 2018) %>% 
   mutate(country =  factor(country, levels = levels_country)) %>%
   group_by(year, country, type) %>% 
   summarise(count = n() / total) %>% 
   filter(type=='R' & year == 2018) %>% 
   arrange(desc(count)) %>% 
-  head(15) %>% 
-  ggplot(aes(x=country, y=count)) + 
+  head(15)
+
+g2 <- ggplot(a2, aes(x=country, y=count)) + 
   geom_bar(stat = "identity", position = position_dodge(), fill = "#5b8124") +
   coord_flip() +
   scale_y_continuous(labels = function(x) paste0(x*100, "%")) + 
@@ -479,7 +485,7 @@ marathon %>%
   axis.title.y = element_blank(),
   axis.title.x = element_blank()
   )
-
+g2
 #ggsave('../plots/countries_2018.png')
 ```
 
@@ -838,12 +844,34 @@ $$
 
 where $D_{ij}$ stands for the difference in running times on each 5k split for runner $i$ and runner $j$ and the $x$s constitute the two dimensional embedding. Hence, we see how to minimize the previous objective function we have to make the difference in representation of each runner $x_i$ and $x_j$ match their actual distance $D_{ij}$. 
 
+\newpage
+
 # 5. Executive Summary
-[][Write the conclusion -- need to have all the graphs from the previous section]
+
+Our analysis of the NYC Marathon data focused on answering the following questions (where we include a brief preamble).
+
+1. __Who are the people that run the NYC marathon and where do they come from?__ The NYC marathon is one of the most important events in the city, thus we wanted to understand who ran this race. Is it only young people (30 and below)? It is mostly New Yorkers? Are there more men than women?
+2. __How does the gender ratio compare across countries and states and what has been its trend overtime?__. Due the overall inclusion of woman in various sports, we wanted to see how the NYC compare to this trend. Aditionally, we wanted to see if woman inclusion was equal among the participating countries. Finally, we wanted to see its trend.
+3. __Does gender matter in terms of performance?__. In some sports that have stringent physical requirements, men tend to perform better than women (for example, in Olympic weightlifting). However, we wanted to understand what was the gap in an endurance sport such as the NYC Marathon. Would woman always perform worse than men? 
+4. __How can we summarize the whole race in a graph?__ Finally, placing demographics aside, we wanted to come up with a plot that summarized the whole race. How can we go about this? It is possible to _see_ in a graph how tight the race was, how many odd events happened and how similar are the runners in all the race?
+
+Next, we provide an answer to each of the previous questions.
+
+1. In terms of location, we find that athletes mostly come from the US (over 70%) and the rest are international. On the right hand side we see the top ten states in the left the top ten countries. We were not surprised to see NJ and CA in the top (the former due to geographical closeness and latter for the well-known healthy trend). Yet, we were surprised to see that Italy and France were so represented. In terms of age and gender. We found that the majority of the participants are young adults around 40 years old and that, on average, female athletes tend to be younger. Also, we say that as age increases the number of female participants decreases. 
+
+```{r Two Pannel Plot, fig.height=2}
+gridExtra::grid.arrange(g0, g3, ncol=2)
+```
+
+2. We found that the gender ratio 
+
+\newpage
 
 # 6. Interactive component
 [][Add the link to the interactive component]
 [][Explain how to use the visualization. What to move, what to look for, etc]
+
+\newpage
 
 # 7. Conclusion
 [][Discuss limitations, lessons learned and future directions]
@@ -853,10 +881,3 @@ where $D_{ij}$ stands for the difference in running times on each 5k split for r
 * Lessons learned...
 
 * What do we want to further do with the data? Maybe add more years, maybe parse the state/countries better, maybe do team analysis...
-
-# Questions
-
-1. Is gender a significant indicator of performance? (Arthur)
-2. How could we summarize the whole race in a graph? (Andres)
-3. How has the gender ratio changed over time? (Andrea & Antonia)
-4. How do performance change by location? (Andrea & Antonia)

@@ -73,35 +73,32 @@ The main difficulty with this data is that it is embedded in a web page. Even th
 
 ## 2.3 Web Scrapping
 
-Web scrapping was more time consuming than we thought. Even though we used the really well-develop package of `BeautifulSoup` it still required us to overcome two main obstacles (1) understanding the web scrapping process and (2) to come up with the template that our program should use in order to find the information.
+Web scrapping was more time consuming than we thought, since the website was built under javascript in order to scrape we needed the use of `selenium` which is an is a WebDriver tool for automation that basically connects to a driver and retrieves the rendered html. From the html we were able to obtain the data using a really well-develop package of `BeautifulSoup` but it still required us to overcome two main obstacles (1) understanding the web scrapping process and (2) to come up with the template that our program should use in order to find the information.
 
-To get a complete understanding of the process, we made intensive use of different resources online: either YouTube videos or other Q&A websites such as `StackOverflow`. A particular source that we found useful was [link](https://medium.freecodecamp.org/how-to-scrape-websites-with-python-and-beautifulsoup-5946935d93fe). Moreover, we became acquainted with the myriad of details that were not evident when we started the process. First, we had to distribute our work in a computer engine on the cloud. The difficulty is that web scrapping is a really slow process. For example, we have to run a long `for-loop` were we have to make a different connection for each of the over 50 K participants of the marathon (this times the number of year that we downloaded). Moreover, we cannot make a constant connection to the web site since that could potentially be considered as an attack. Thus, we had to replicate the pace that a person takes to access the website. Additionally, we had to set-up the computer engine and let it do the work (which took approximately 3 days)
+To get a complete understanding of the process, we made intensive use of different resources online: either YouTube videos or other Q&A websites such as `StackOverflow`. A particular source that we found useful was this article  [(link)](https://medium.freecodecamp.org/better-web-scraping-in-python-with-selenium-beautiful-soup-and-pandas-d6390592e251). Moreover, we became acquainted with the myriad of details that were not evident when we started the process. First, we had to distribute our work in a computer engine on the cloud. The difficulty 
+is that opening a web driver each time to obtain the render html is a really slow process, specially that we needed for each finisher. For example, we have to run a long `for-loop` were we have to make a different connection for each of the over 50 K participants of the marathon for each year (this times the number of year that we downloaded). Additionally, we had to set-up the computer and parallelize the process and let it do the work (which took approximately 3 days)
 
-In term of coming up with a template for our program to run. We had to learn (actually before starting D3) how to read all the html elements of a web page and embed that knowledge into a script for `BeautifulSoup` to perform its magic. Furthermore, this is a sensitive procedure. Altering any location of an element in the web page renders the script useless. Thus, on the one hand, we had to make several "robustness checks" for our script before letting it run (because we risk losing days of work). On the other hand, we had to develop for each year a new template! Every year the layout was altered in some particular way, and so we had to adapt for those changes. However, we were still able to download the same information every year (which made the template creating process slightly more exciting).
+In term of coming up with a template for our program to run. We had to learn (actually before starting D3) the structure of the html website and embed that knowledge into a script for `BeautifulSoup` to perform its magic. Furthermore, this is a sensitive procedure. Altering any location of an element in the web page renders the script useless. Thus, on the one hand, we had to make several "robustness checks" for our script before letting it run (because we risk losing days of work). The good thing is that the same template was able to be used for all participants across the four years of data we scrapped.
 
-At the end, we were quite happy that we were able to download the data. Mostly because we were doing an analysis that excited us but also because, due to the difficulty of the process, we knew that not many people had done this analysis before. 
+At the end, we were quite happy that we were able to download the data. Mostly because we were doing an analysis that excited us but also because, due to the difficulty of the process, we knew that not many people had done this analysis before.
 
 # 3. Analysis of data quality
 
 Due to the web scrapping procedure we were afraid that the data would have a bunch of errors, but actually it did not. We divided our analysis for data quality into four sections. First, we analyze the general missing values patters. Second, we delve into the one source of missing values: _messy locations_. Then, we analyze the other source of missing values: _inconsistent time formats_. Finally, we comment on the nature of outliers in this data.
 
-## 3.1 Missing values and its patterns
-
-[][Add visna plot from raw data to show what are the missing percentages and patterns - I believe Joyce expects this when treating missing values]
-
-## 3.2 Messy Locations
+## 3.1 Messy Locations
 
 Sometimes the geographical information displayed in the webpage related to the city of the runner, sometimes to her state and some others times to the county she was born (definitely our web scrapping program was not so smart as to make those types of swaps). Then we had to make a decision on what to do about this: either to spend quite some time on mapping manually all the cases or do some kind of parsing and leave aside the cases without a match. 
 
 A priori we were unsure what to do, we had mixed feelings about not using this information, which was a key variable for our analysis. Hence to make a decision first we assessed how bad our problem was. For this we ran our parsing procedure to see how many cases lack a match. Our parsing procedure consisted on two steps: first, we would try to parse the states and for the remaining we would pass our country mapping (which was tractable). Fortunately, we got quite lucky and the procedure almost mapped completely off-the-shelve. The reason is that the majority of the inputs that had a state name in the geographical location where from the USA and also because the R function `state.abb` was quite robust and it allowed us to get the state abbreviations. Therefore, we left the rest of the cases as NA and move on into adding the latitude and longitude of the place.
 
-## 3.3 Inconsistent Time Formats
+## 3.2 Inconsistent Time Formats
 
 We have never had a good experience when working with a time series data sets and this was, unfortunately, not the exception. We made extensive use of the available tools to go from formats like "01:00:23" to an actual meaningful time stamp (on this, it appears as if rather than spreading the best practices of presenting time variables in a data set, the world is rather creating more sophisticated tools to go over every eventuality).
 
 The previous discussed problem was multiplied by all the columns that contained time data which was quite a few: the finished time, the time per 5 k split, the official time and many more. Thus after running our parsing function on each column we filtered out any observation that had at least one missing value (that is, not a parsable time) in any of the main variables such as `gun_time`, `official_time`, and each of the splits `split_<x>k`.
 
-## 3.4 Outliers
+## 3.3 Outliers
 
 Outliers in this context come either from poor performing runners, excellent performing runners and other type of competitions categories (wheelchair and handicap). Thus, the notion of _outlier_ here stems from mixing many different cohorts of people (professional athletes, standard competitors, wheelchair and handicap) in the data rather than by having some plausible error in a certain recording of a variable. Although there were some people that finished the marathon in around 7 hours. But we are uncertain if this is a mistake or maybe they burnt out and finished the race as they could.
 
@@ -113,15 +110,14 @@ Hence, after separating the data into different groups, now there where not evid
 This section contains the main results of our exploratory data analysis. Each of the subsections below addresses one of the research questions that we posed in the introduction.
 
 ## 4.1 Demographic
-** Exploratory Data Analysis and Visualization **
 
-** Age Distributions **
+### 4.1.1 Age Distributions
 
-Performance in athletics is often impacted by the age of the athletes. For example, most of the participants in the Olympics and in international sports competitions tend to be people under the age of 40. Since Marathon running is a test of endurance, it would be interesting to see if similar trends exist in the participants of the NYC Marathon. We can plot density curves for age of the finishers in each year for which we have data (2015-2018).
+Performance in athletics is often impacted by the age of the athletes. For example, most of the participants in the Olympics and in international sports competitions tend to be people on the younger end of the spectrum. Since marathon running is a test of endurance, it would be interesting to see if similar trends exist amongst the participants of the NYC Marathon. We can plot density curves of the age of the finishers in each year for which we have data.
 
-From a first glance, we notice that the distribution of the data appears to have some sort of a normal shape, with some flattening out at the apex of the curve, and a clear mode. The median age is between 43 in 2015 and 40 in 2018. The youngest participant is 18, since the rules of the race most likely forbid minors from participating, and the oldest is 87.
+From a first glance, we notice that the distribution of the data appears to have an approximately normal shape, with some flattening out at the top of the curve, and a clear mode. The youngest participant is 18, since the rules of the race most likely forbid minors from participating, and the oldest is 87.
 
-Overall, there are more younger people finishing the race in comparison to older people, with a large portion of the participants between the age of 30 and 50. 
+Overall, there are more younger people finishing the race in comparison to older people, with a large portion of the participants between the age of 30 and 50, and this trend remains fairly constant across the years. The median age is between 43 in 2015 and 40 in 2018, and there is a slight trend towards the participants becoming younger. This is evidenced by the small leftward shifts in the curves from one year to the next. 
 
 ```{r message=FALSE, warning=FALSE}
 marathon$year <- factor(marathon$year)
@@ -134,7 +130,7 @@ ggplot(marathon, aes(x=age, color=year)) +
   theme_bw()
 ```
 
-** Gender Proportions **
+### 4.1.2 Gender Proportions
 
 A simple bar chart of the number of men and women amongst the participants will give us a basic understanding of who is participating in the race. From the graph we see that there are more men in the race in comparison to women.
 
@@ -152,7 +148,7 @@ The next step would be to examine the age distributions across the different gen
 It is interesting to see that the distributions seem very similar across the two genders, with unimodal, approximately normal shapes. It is interesting as well to see that there are more younger women amongst the finishers than there are younger men. Overall, the men seem to be a few years older on average in comparison to the women. 
 
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 marathon$age_factor <-marathon$age
 
 g3 <- ggplot(marathon, aes(x = age_factor, fill = gender)) + 
@@ -203,9 +199,9 @@ g4 <- vcd::doubledecker(gender ~ agecat,
                              gp_labels=(gpar(fontsize=6))))
 ```
 
-**Finish Times by Age**
+### 4.1.3 Finish Times by Age
 
-Something that would be interesting to examine would be the finish times by age of the runners. Here we will look only at the actual "runners" of the race, excluding hand cyclists and wheelchair racers, as their times would be significantly faster than the runners. We can try to display the data in several formats, the first will be a scatterplot where we take a sample of the data and plot age on the x-axis and finish time in minutes on the y-axis. We can see that there are a lot of runners aged 35 to 50 and running time between 4 and 5 hours. 
+Next we examine the finish times by age of the runners. Here we will look only at the actual "runners" of the race, excluding hand cyclists and wheelchair racers, as their times would be significantly faster than the runners. We can try to display the data in several formats, the first will be a scatterplot where we take a sample of the data and plot age on the x-axis and finish time in minutes on the y-axis. We can see that there are a lot of runners aged 35 to 50 and running time between 4 and 5 hours.  
 
 ```{r message=FALSE, warning=FALSE}
 marathon <- marathon %>%
@@ -244,9 +240,9 @@ ggplot(runners, aes(x=age, y=official_time)) +
       title="Finish Times of Runners by Age")
 ```
 
-** Analysis of Teams **
+### 4.1.4 Analysis of Teams
 
-All together there are around 651 different teams that entered the NYC Marathon Race in the running category. Many of these teams are groups of volunteers that joined their company team, or a local charity team. They are also include amateur running clubs as well as professional teams that are sponsored by large athletic equipment firms such as Nike and Adidas. If we look at all of the runners, we see that 39815 of the runners were part of a running team, while 160998 we not, which is over 80% of the runners. Therefore, it's only about 1/5 of the finishers that were part of an organized team. In the graph below, 0 indicates that the non-team runners, and 1 indicates the runners on teams. 
+All together there are 651 different teams that entered the NYC Marathon Race in the running category. Many of these teams are groups of volunteers that joined their company team or a local charity team. They are also amateur running clubs, and finally professional teams that are sponsored by large athletic equipment firms such as Nike and Adidas. If we look at all of the runners, we see that 39815 of the runners were part of a running team, while 160998 we not, which is over 80% of the runners. Therefore, it's only about 1/5 of the runner that finished the race were part of an organized team. In the graph below, 0 indicates the non-team runners, and 1 indicates the runners on teams. 
 
 ```{r}
 runners$team_binary <- ifelse(is.na(runners$team), 0, 1)
@@ -329,46 +325,10 @@ ggplot(best_teams_F, aes(x=sum_top_time, y=reorder(team, -sum_top_time))) +
 ```
 
 
-** Conclusion **
-
-One of the challenges that we faced was that wheelchair racers and hand cyclists participated in such few numbers that they were ignored for the most part since there was so little data. 
-
-### Gender
-
-```{r}
-marathon %>% 
-  filter(!is.na(gender)) %>% 
-  group_by(year) %>% 
-  summarise(F = sum(gender == 'F') / n(),
-            M = sum(gender == 'M') / n())
-
-marathon %>% 
-  filter(!is.na(gender)) %>% 
-  group_by(year, type) %>% 
-  summarise(F = sum(gender == 'F') / n(),
-            M = sum(gender == 'M') / n())
-```
-
 ### Location
 
-How many we have location?
-```{r}
-marathon %>% 
-  group_by(year) %>% 
-  summarise(n = sum((!is.na(country))/ n()))
-```
+We can group the location data into three groups: local, national, and international. From the table below, we see that the proportion of representation that these three groups recieves remains fairly constant over the 4 years. Around 40% of the finishers are local, meaning that they reside in New York. There are around 37-40% representing the USA excluding those from NY. And finally, around 20% of the participants come to NY from other countries in the world. This information is summarized in the bar chart below where the data has been aggregated across years. 
 
-Cities without country
-```{r}
-without_country <- marathon %>% 
-  filter(is.na(country)) %>% 
-  group_by(city) %>% 
-  summarise(n = n()) %>% 
-  arrange(desc(n)) 
-```
-
-
-Overall
 ```{r}
 overall_loc <- marathon %>% 
   filter(!is.na(country) & type == 'R') %>% 
@@ -404,8 +364,8 @@ g0 <- ggplot(a0, aes(x=location_type)) + geom_bar(aes(y = (..count..)/sum(..coun
 g0
 ```
 
+Excluding New Yorkers from the data, we can further investigate which US States are most represented amongst the marathon finishers. In the horizontal bar chart we see that after New York, New Jersey has the most participants, followed by California and Massachusettes. These results are not surprising as New Jersey and Massachusettes are very close to New York. Additionally, California is the most populous state therefore is expected that it would be heavily represented, despite its lack of proximity to New York. 
 
-For nationals:
 ```{r}
 levels_state <- marathon %>% 
           filter(!is.na(state_name) & country == 'USA' & state != 'NY' & year == 2018) %>% 
@@ -446,6 +406,8 @@ g1
 
 ```
 
+We can examine a similar plot at the country level. After the US, Italy by far has the most representated country, followed by several other Western European countries, China, Brazil, Mexico, Canada and Australia. Is is interesting to note that Europeans have higher rates of participation in the marathon compared to countries that are close to the US, including immediate neighbors Mexico and Canada. 
+
 ```{r}
 levels_country <- marathon %>% 
           filter(!is.na(country) & country != 'USA' & year == 2018) %>% 
@@ -485,8 +447,9 @@ g2
 #ggsave('../plots/countries_2018.png')
 ```
 
+## Top Runners
 
-## Top runners
+We can further examine the importance of country amongst the runners by looking at where the top runners come from. The US has had the most top runners in 2018. This result is expected since a large majority of the participants are coming from the US. What is surprising, however, is that countries such that are very lightly represented such as Uganda and Kenya end up having a significant portion of their runners finishing in the top.
 
 ```{r}
 total <- 10
@@ -515,16 +478,9 @@ marathon %>%
 
 ### Women Ratio
 
+The ratio of men and women participants in sports has long been an important topic of discussion. We can examine to what extent women are equally represented amongst the NYC marathon finishers according to their country of origin. In the cleveland dot plot below we plot the fraction of runners from a country that are women, with the country names on the y-axis ordered by decreasing proportion. The vertical line indicates equal proportion. 
 
-```{r}
-marathon %>% 
-  filter(!is.na(gender)) %>% 
-  group_by(year, type) %>% 
-  summarise(F = sum(gender=='F'),
-            M = sum(gender=='M'),
-            ratio = F/M)
-```
-
+We note that in 2018, only New Zealand is represented more highly by women than by men. Russia is 19th on the list having a proportion of around 0.5, meaning that the remaining 122 countries represented had more than double the number of men compared to the number of women. From the table we see that the aggregate proportion has remained relatively stable over the last 4 years at around 0.7 for the runners. But from the visualization it is clear that many of these women are coming from only a handful of countries. 
 
 ```{r}
 marathon %>% 
@@ -557,7 +513,8 @@ geom_point(size=5) +
 #ggsave('../plots/ratio_country.png')
 ```
 
-By national
+On the US state level, however, women are the majority of finishers for 27 states, including California which is the third most represented state. Many of the other states in the aforementioned 27, however, do not have many participants, and so the ratio of women to men is close to, but not equal to 1. 
+
 ```{r}
 marathon %>% 
   filter(type == 'R') %>%
@@ -590,6 +547,9 @@ marathon %>%
 #ggsave('../plots/ratio_state.png')
 ```
 
+Visualizing the change in these ratios over time shows us that many states and countries have had a positive change in the number of women they have participating in the NYC marathon from 2015 to 2018. We can note the trend that many Southern and Mid-Western states including Louisiana, Alabama, Kentucky, Tennessee, and Kansas have increased their fraction. Similarly, several countries have increased the number the fraction of women representing their country several times over. 
+
+Despite all these positive individual country-level and state-level shifts in the gender break-down of the people representing their countries or states, the overall ratio of women to men has remained roughly constant over the past four years. Therefore, while some locations are sending more women, others are sending less, and the fraction remains constant. 
 
 ```{r}
 marathon %>% 
@@ -656,9 +616,7 @@ marathon %>%
     panel.grid.major.y = element_line(linetype=3, color="lightgray", size=0.4), axis.text.y = element_text(size=rel(1.3)),
   axis.title.y = element_blank(),
   axis.title.x = element_blank()
-  )
-
-
+  ) + 
 theme(
   axis.title.y = element_blank(),
   axis.title.x = element_blank()
@@ -666,7 +624,6 @@ theme(
 
 #ggsave('../plots/ratio_change_country.png')
 ```
-
 
 ## 4.2 Running Variables
 
@@ -781,6 +738,8 @@ The results are quite striking and diverse:
 How can we explain those two completely different behaviors of our data?
 It seems that for the runners in the intermediary groups, gender does not count when it comes to the race performance. Those runners have some prior experience and/or have trained regularly to achieve those results. It lets us think that __training can erase physiological differences__. The first group case is quite easy to interpret. __For athletes, training means pushing the body to its limits__. Therefore, it is not so surprising that this group exhibit a strong performance dependence on gender, since we find that dependence in almost all athletic disciplines. 
 
+\newpage
+
 ## 4.3 Summarizing the whole race in a graph
 
 We wanted to understand how we could summarize the race in a single graph. This was a challenge because we were unsure of what to graph to choose: should it be a histogram a box plot. Moreover, what variable should we used. The `official_time` but what about the performance between the different splits? Maybe some athlete had a strong start but finished poorly. Our first take to this problem was to generate a box plot of the running time.
@@ -796,9 +755,7 @@ gbox <- ggplot(data = df_embed) +
 gbox
 ```
 
-as we see above, the box plot is not as informative as we would like. It tells us that the finishing time was over 4 hours, where the mass concentrates (from slightly below 4 hours to 5 hours) and that the max and min. But we were not satisfied. Then, based on one of our ML homeworks, we saw that there was a technique that could go from distances between the observations to a two dimensional embedding. As an illustration, this technique could take the distances from all the cities within the US and recover the whole map
-
-[][Add the distance matrix and the map recovered... maybe]
+as we see above, the box plot is not as informative as we would like. It tells us that the finishing time was over 4 hours, where the mass concentrates (from slightly below 4 hours to 5 hours) and that the max and min. But we were not satisfied. Then, based on one of our ML homeworks, we saw that there was a technique that could go from distances between the observations to a two dimensional embedding. As an illustration, this technique could take the distances from all the cities within the US and recover the whole map.
 
 where we see how New York and Boston are bunched together were as Seattle and Miami are thrown to two different corners. Thus, we thought that maybe this two dimensional embedding would be a useful summary of our data. The only missing ingredient was to define what the distance between different runners meant.
 
@@ -853,7 +810,7 @@ Next, we provide an answer to each of the previous questions.
 
 \vspace{6pt}
 
-1. In terms of location, __we find that athletes mostly come from the US (over 70%) and the rest are international__. On the right hand side we see the top ten states in the left the top ten countries. We were not surprised to see NJ and CA in the top (the former due to geographical closeness and latter for the well-known healthy trend). Yet, we were surprised to see that Italy and France were so represented. In terms of age and gender, __we found that the majority of the participants are young adults around 40 years old and that, on average, female athletes tend to be younger__. Also, we say that as age increases the number of female participants decreases. 
+1. In terms of location, __we find that athletes mostly come from the US (over 70%) and the rest are international__. In terms of age and gender, __we found that the majority of the participants are young adults around 40 years old and that, on average, female athletes tend to be younger__. Also, we say that as age increases the number of female participants decreases. 
 
 \vspace{6pt}
 
@@ -861,6 +818,8 @@ Next, we provide an answer to each of the previous questions.
 g0 <- ggplot(a0, aes(x=location_type)) + 
   geom_bar(aes(y = (..count..)/sum(..count..))) +
   scale_y_continuous(labels = function(x) paste0(x*100, "%")) + 
+  ggtitle('Location of Runners') +
+  xlab('') +
     theme_minimal(16) + 
     theme(
     panel.grid.major.x=element_blank(),
@@ -868,6 +827,7 @@ g0 <- ggplot(a0, aes(x=location_type)) +
     panel.grid.major.y = element_blank(),
     axis.title.y = element_blank(),
     axis.title.x = element_blank(),
+    plot.title = element_text(size = 8),
     axis.text.y = element_text(size = 8),
     axis.text.x = element_text(size = 8)
   )
@@ -893,7 +853,7 @@ gridExtra::grid.arrange(g0, g3, ncol=2)
 
 \vspace{6pt}
 
-2. We found that the gender ratio is generally low and that only 3 countries are above 0.8 (women / men). Nonetheless, in the majority of the US states have an above 1 ratio. Please see section [XXX] for the full decomposition of each graph.
+2. We found that the gender ratio is generally low and that only 3 countries are above 0.8 (women / men). Nonetheless, in the majority of the US states have an above 1 ratio. Please see section 4.1 for the full decomposition of each graph.
 
 \vspace{6pt}
 
@@ -918,12 +878,15 @@ df3 <- df3 %>% group_by(over_60) %>%
 
 gender3 <- ggplot(data = df3, aes(x = over_60, y = count)) +
   geom_col() +
-  labs(title = '...',
-       subtitle = 'Women / men') +
+  labs(title = 'Almost states all above 1',
+       subtitle = 'Women / men for US states 2018') +
   ylab('States') +
   xlab('') +
-  theme(plot.title = element_text(size = 8, face = "bold")) +
-  theme(plot.subtitle = element_text(size = 8)) +
+  theme(plot.title = element_text(size = 8),
+        plot.subtitle = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.text = element_text(size = 8),
+        axis.title = element_text(size = 8)) +
   coord_flip()
 
 df4 <- marathon %>% 
@@ -947,12 +910,15 @@ df4 <- df4 %>% group_by(over_60) %>%
 
 gender4 <- ggplot(data = df4, aes(x = over_60, y = count)) +
   geom_col() +
-  labs(title = '...',
-       subtitle = 'Women / men') +
-  ylab('Contries') +
+  labs(title = 'Few countries above 0.5',
+       subtitle = 'Women / men for Countries 2018') +
+  ylab('Countries') +
   xlab('') +
-  theme(plot.title = element_text(size = 8, face = "bold")) +
-  theme(plot.subtitle = element_text(size = 8)) +
+  theme(plot.title = element_text(size = 8),
+        plot.subtitle = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.text = element_text(size = 8),
+        axis.title = element_text(size = 8)) +
   coord_flip()
 
 gridExtra::grid.arrange(gender4, gender3, ncol=2)
@@ -960,7 +926,7 @@ gridExtra::grid.arrange(gender4, gender3, ncol=2)
 
 \vspace{6pt}
 
-3. We found that the difference in performance between women and men is only observed in groups that rely on more capacity (for full details see section XXX).
+3. We found that the difference in performance between women and men is only observed in groups that rely on more capacity (for full details see section 4.2).
 
 \vspace{6pt}
 
@@ -973,6 +939,14 @@ median15 <- r15 %>%  filter(gender != 'NA') %>%
 
 wave1 <- ggplot(data = median15, aes(x = wave, y = diff)) +
   geom_col() +
+  ylab('Median Difference (min)') +
+  xlab('') +
+  ggtitle('Waves 1 and 4 show differences') +
+  theme(plot.title = element_text(size = 8),
+        plot.subtitle = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.text = element_text(size = 8),
+        axis.title = element_text(size = 8)) +
   coord_flip()
 
 wvsm <- marathon %>% filter(gender != 'NA', year == 2018)
@@ -981,23 +955,39 @@ wave2 <- ggplot(data = wvsm, aes(x = factor(gender, levels = unique(gender)) , y
   geom_boxplot(fill = "royalblue2", outlier.colour = "darkorange1") + 
   ylab("Official Time") +
   xlab("Year") +
-  ggtitle("Each year, men perform better than women as a whole") +
-  theme(plot.title = element_text(hjust = 0.5, size=15)) +
-  theme_bw()
+  ggtitle("Overall men perform better than women") +
+  theme(plot.title = element_text(size = 8, hjust=0.5),
+        plot.subtitle = element_text(size = 8),
+        axis.text.y = element_text(size = 8),
+        axis.text = element_text(size = 8),
+        axis.title = element_text(size = 8))
 
 gridExtra::grid.arrange(wave2, wave1, ncol=2)
 ```
 
 \vspace{6pt}
 
-4. Finally, __we saw that we could summarize the whole race by using an embedding__. This embedding allowed us to visualize (1) how close the race was by looking at the distance between points, (2) what is the variance of the data set by looking at the spread on the y-axis, (3) if odd events happended by noticing the dots that were apart from their closest group. See section XXX for all the details
-
+4. Finally, __we saw that we could summarize the whole race by using an embedding__. This embedding allowed us to visualize (1) how close the race was by looking at the distance between points, (2) what is the variance of the data set by looking at the spread on the y-axis, (3) if odd events happended by noticing the dots that were apart from their closest group. See section 4.3 for all the details
 
 \newpage
 
 # 6. Interactive component
-[][Add the link to the interactive component]
-[][Explain how to use the visualization. What to move, what to look for, etc]
+Interactive component can be found in shinnyapps server [(link)](https://anavarrete.shinyapps.io/marathon_dashboard3/])
+
+For the interactive component, we decided to generate a dashboard that could let us summarize the information for each location (states or countries), and compare some results with the overall, across the four years of marathon data we collected. We belive that summarizing data in a graphical way
+
+Creating this App will allow users to choose between countries and states across time, and compare different metrics:
+
+  * The gender-age distribution 
+  * The proportion of woman and men and compare it with the rest of the world/states
+  * The official time distribution of a specific location compared with the overall
+  * The change in terms of performance among athletes, as race advances the distribution widens and for some countries this becomes more clear than for others.
+
+Having summarize information by country and state can be very useful for people interested in marathons, sponsors and even governments to try to promote the participation, specially in countries with not many participants but perfoming above average (as the case of Kenya). As well, it can encourage the a more equal participation between woman and men by comparing their country/state with the rest of the world/country. We expect that the interactive component of this project can help us understand more about the people participating and the differences in terms of representation and performance compared to the total.
+
+To use this tools one should choose a specifc year and location from the sidebar. The location can be to choose between a state from the US or a country. Since there were too many options, we use some shiny Widgets, that do a live-search among the options when typing the first letters.
+
+Some of the key findings in this interactive was looking at the different results, specially for countries like Kenya with a distribution of official times outperforming the general or Taiwan on the opposite side.
 
 \newpage
 

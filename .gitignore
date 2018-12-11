@@ -2,7 +2,6 @@
 /AndPotap/DBs/
 /AndPotap/Tableau/
 
-*.csv
 *.DS_Store
 .Rproj.user
 /.Rhistory

@@ -16,7 +16,6 @@ file_input <- './DBs/marathon_2018_clusters.csv'
 file_output <- './DBs/runner_embedding.png'
 ```
 
-
 ## Graphs for presentation
 
 I load the data

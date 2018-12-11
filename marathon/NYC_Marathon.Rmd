@@ -7,12 +7,21 @@ output:
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(ggplot2)
+library(grid)
+library(lubridate)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r Load the data, include=FALSE}
+# getwd()
 file_embedding <- '../data/embedding/marathon_2018_clusters.csv'
 df_embed <- read_csv(file = file_embedding)
+m18 <- read_csv("../data/clean/marathon_2018.csv")
+m17 <- read_csv("../data/clean/marathon_2017.csv")
+m16 <- read_csv("../data/clean/marathon_2016.csv")
+m15 <- read_csv("../data/clean/marathon_2015.csv")
+marathon <- rbind(m18, m17, m16,m15)
+marathon_2 <- marathon
 ```
 
 # 1. Introduction
@@ -102,18 +111,341 @@ Hence, after separating the data into different groups, now there where not evid
 This section contains the main results of our exploratory data analysis. Each of the subsections below addresses one of the research questions that we posed in the introduction.
 
 ## 4.1 Demographic
+** Exploratory Data Analysis and Visualization **
 
-(over time)
+** Age Distributions **
 
-* Age
-* Gender
-* Location
-* Teams (ranks)
+Performance in athletics is often impacted by the age of the athletes. For example, most of the participants in the Olympics and in international sports competitions tend to be people under the age of 40. Since Marathon running is a test of endurance, it would be interesting to see if similar trends exist in the participants of the NYC Marathon. We can plot density curves for age of the finishers in each year for which we have data (2015-2018).
+
+From a first glance, we notice that the distribution of the data appears to have some sort of a normal shape, with some flattening out at the apex of the curve, and a clear mode. The median age is between 43 in 2015 and 40 in 2018. The youngest participant is 18, since the rules of the race most likely forbid minors from participating, and the oldest is 87.
+
+Overall, there are more younger people finishing the race in comparison to older people, with a large portion of the participants between the age of 30 and 50. 
+
+```{r}
+marathon$year <- factor(marathon$year)
+
+ggplot(marathon, aes(x=age, color=year)) + 
+  geom_density() +
+  ggtitle("Age Distributions from 2015-2018") + 
+  ylab("Density") +
+  xlab("Age") +
+  theme_bw()
+```
+
+** Gender Proportions **
+
+A simple bar chart of the number of men and women amongst the participants will give us a basic understanding of who is participating in the race. From the graph we see that there are more men in the race in comparison to women.
+
+```{r}
+df <- marathon %>% filter(gender != 'NA')
+ggplot(df, aes(x = gender)) +
+  geom_bar(stat='count', fill='lightblue')
+```
+
+
+** Age Distribution by Gender **
+
+The next step would be to examine the age distributions across the different genders. The data collection process only allowed for the  representation of two genders: Male and Female, and so we will restrict our analysis to these two genders. 
+
+It is interesting to see that the distributions seem very similar across the two genders, with unimodal, approximately normal shapes. It is interesting as well to see that there are more younger women amongst the finishers than there are younger men. Overall, the men seem to be a few years older on average in comparison to the women. 
+
+
+```{r}
+# names(marathon)[names(marathon) == 'gender'] <- 'Gender'
+
+# marathon$age_factor <- as.factor(marathon$age)
+marathon$age_factor <- marathon$age
+
+ggplot(marathon, aes(x = age_factor, fill = gender)) + 
+  geom_bar(data = subset(marathon, gender == "F"), binwidth =2) + 
+  geom_bar(data = subset(marathon, gender == "M"), binwidth =2, aes(y=..count..*(-1))) +
+  scale_y_continuous(breaks = seq(-5000, 5000, 100), 
+                     labels=abs(seq(-5000, 5000, 100))) + 
+  scale_fill_manual(values = c("darkorange1", 
+    "royalblue2")) + 
+  coord_flip() + 
+  theme_bw() + 
+  ggtitle('Distribution of Age By Gender') +
+  xlab("Count") +
+  ylab("Age") + 
+  theme(axis.title.x = element_blank(), 
+        axis.line.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+  # theme(plot.title = element_text(hjust = 0.5, size = 15) ) +
+  # theme(axis.title=element_text(size=14))
+```
+
+
+We can also examine this data in the form of a mosaic plot. Is is more clear from this plot that there are more men in the race than there are women. One of the benefits of a mosaic plot is that relative proportions between different categories are easier to determine, but one of the downsides is that distributions cannot be determined. 
+
+```{r}
+marathon$agecat <- c(0)
+# create age categories for 10 year age groups (7 years for the first group)
+marathon$agecat[marathon$age > 17 & marathon$age <= 25] <- "[18,25]"
+marathon$agecat[marathon$age > 25 & marathon$age <= 35] <- "[25,35]"
+marathon$agecat[marathon$age > 35 & marathon$age <= 45] <- "[35,45]"
+marathon$agecat[marathon$age > 45 & marathon$age <= 55] <- "[45,55]"
+marathon$agecat[marathon$age > 55 & marathon$age <= 65] <- "[45,65]"
+marathon$agecat[marathon$age > 65 & marathon$age <= 75] <- "[65,75]"
+marathon$agecat[marathon$age > 75 & marathon$age <= 85] <- "[75,85]"
+marathon$agecat[marathon$age > 85 & marathon$age <= 95] <- "[85,95]"
+```
+
+```{r message=FALSE, warning=FALSE}
+cols <- c("lightgreen", "skyblue")
+vcd::doubledecker(gender ~ agecat,
+                  data = marathon,
+                  spacing_args = list(start =0.3, rate = 1.5),
+                  gp = gpar(fill=cols),
+                  labeling_args=list(
+                  boxes = FALSE,
+                   offset_labels = c(1, 0, -1, 0),
+                             gp_labels=(gpar(fontsize=6))))
+```
+
+**Finish Times by Age**
+
+Something that would be interesting to examine would be the finish times by age of the runners. Here we will look only at the actual "runners" of the race, excluding hand cyclists and wheelchair racers, as their times would be significantly faster than the runners. We can try to display the data in several formats, the first will be a scatterplot where we take a sample of the data and plot age on the x-axis and finish time in minutes on the y-axis. We can see that there are a lot of runners aged 35 to 50 and running time between 4 and 5 hours. 
+
+```{r message=FALSE, warning=FALSE}
+marathon <- marathon %>%
+ mutate(time_min = hour(official_time)* 60 + minute(official_time))
+
+runners <- marathon %>%
+  filter(type == "R")
+
+data_sample <- sample_n(runners, 20000)
+
+ggplot(data_sample, aes(x = age, y = time_min)) +
+  geom_point(color = 'dodgerblue1', alpha = 0.8) +
+  geom_density2d(color = "red") +
+  xlim(15,90) +
+  ylim(0,600) +
+  theme_bw() +
+  ylab("Finish Time in Minutes") +
+  xlab("Age") +
+  labs(x="Age", 
+      y="Finish Time (min)",
+      title="Finish Times of Runners by Age",
+      subtitle="Sample Size: 20,000")
+```
+
+Another way to visualize this information is by creating a heat map with the same axis as in the previous plot. Here we will use the entire data set, and have the darker colors represent the value pairs where there are more data points present. We see that the highest concentration of runners can be found between he ages of 30 and 50, and between 4 and 5 hours. Another observation is that the older people get, the fewer fast runners there are. This is evident by the fact that there are no runners in the bottom right hand corner. What is also interesting is that all of the fastest runners cover a fairly wide age range from 20 to 42. 
+
+```{r message=FALSE, warning=FALSE}
+ggplot(runners, aes(x=age, y=official_time)) + 
+  scale_fill_gradient(low = "lightblue", high = "blue") +
+  geom_hex() +
+  ylab("Finish Time in Minutes") +
+  theme_bw() + 
+  xlab("Age") +
+  labs(x="Age", 
+      y="Finish Time",
+      title="Finish Times of Runners by Age")
+```
+
+** Analysis of Teams **
+
+All together there are around 651 different teams that entered the NYC Marathon Race in the running category. Many of these teams are groups of volunteers that joined their company team, or a local charity team. They are also include amateur running clubs as well as professional teams that are sponsored by large athletic equipment firms such as Nike and Adidas. If we look at all of the runners, we see that 39815 of the runners were part of a running team, while 160998 we not, which is over 80% of the runners. Therefore, it's only about 1/5 of the finishers that were part of an organized team. In the graph below, 0 indicates that the non-team runners, and 1 indicates the runners on teams. 
+
+```{r}
+runners$team_binary <- ifelse(is.na(runners$team), 0, 1)
+runners$team_binary <- as.factor(runners$team_binary)
+
+teams <- runners %>%
+  filter(n() > 5)
+
+ggplot(teams, aes(x = team_binary)) + 
+  geom_bar(fill="pink") +   
+  theme_bw()
+```
+
+
+Next we look at box plots for the the official finishing times for team runners vs. non-team runners. Surprisingly the distributions look almost identical. The medians are very close to one another for the two groups, as are each of the other quantiles. 
+
+We can see that the outliers are slightly more extreme for the team runners in both directions. The fastest runner is part of a team, and the slowest runner is also part of a team. 
+
+```{r}
+ggplot(runners, aes(x = team_binary, y = official_time)) +
+  geom_boxplot(fill= "pink") + 
+  theme_bw() +
+  ylab("Official Time")
+```
+
+Now we can look within the teams to identify the best teams for women and for men. To do this we looked at teams that contained more than 5 members, and ranked the team members according to their performance. Then we took the sum of the top 3 runners per team, and again ranked the teams. 
+
+It is not surprising that many of the team names repeat for both genders. Additionally we can see what many of the names would be familiar to people, such as Nike, Adidas, New Balance and the New York Athletic Club
+
+```{r}
+runners <- runners %>%
+  mutate(team = tolower(team)) %>%
+  filter(year == 2018)
+
+best_teams_M_2018 <- runners %>%
+  filter(!is.na(team)) %>%
+  filter(gender == "M") %>%
+  group_by(team) %>%
+  filter(n() > 5) %>%
+  arrange(official_time)%>%
+  mutate(rank = rank(official_time)) %>%
+  select(team, official_time, rank) %>%
+  arrange(team, rank) %>%
+  filter(rank <= 3) %>%
+  dplyr::summarize(sum_top_time = sum(official_time)) %>%
+  arrange(sum_top_time)
+
+best_teams_M <- best_teams_M_2018[1:10, ]
+
+ggplot(best_teams_M, aes(x=sum_top_time, y=reorder(team, -sum_top_time))) + 
+  geom_point(color='blue') +
+  ggtitle("Top 10 Teams - 2018 Male") +
+  theme_bw() + 
+  ylab("Team Name") + 
+  xlab("Official Time")
+```
+
+```{r}
+best_teams_F <- runners %>%
+  filter(!is.na(team)) %>%
+  filter(gender == "F") %>%
+  group_by(team) %>%
+  filter(n() > 5) %>%
+  arrange(official_time)%>%
+  mutate(rank = rank(official_time)) %>%
+  select(team, official_time, rank) %>%
+  arrange(team, rank) %>%
+  filter(rank <= 3) %>%
+  dplyr::summarize(sum_top_time = sum(official_time)) %>%
+  arrange(sum_top_time)
+
+best_teams_F <- best_teams_F[1:10, ]
+
+ggplot(best_teams_F, aes(x=sum_top_time, y=reorder(team, -sum_top_time))) + 
+  geom_point(color='blue') +
+  ggtitle("Top 10 Teams - 2018 Female") +
+  theme_bw() + 
+  ylab("Team Name") + 
+  xlab("Official Time")
+```
+
+
+** Conclusion **
+
+One of the challenges that we faced was that wheelchair racers and hand cyclists participated in such few numbers that they were ignored for the most part since there was so little data. 
 
 ## 4.2 Running Variables
 
-* Strategy (clusters)
-* Waves
+Is gender a significant indicator of performance? 
+In all the following sections, we will only consider the runners, not other categories. Indeed, for instance, the wheelchair athletes would be considered as outliers since they race way faster than runners. Only considering runners will help us draw conclusions.
+
+
+When analyzing a sport event, a natural question instantaneously arises: does gender affect performance, and to what extend?
+
+```{r, include=FALSE, warning=FALSE}
+marathon[, 'diff'] <- marathon[, 'gun_time'] - marathon[, 'official_time']
+marathon$diff <- as.numeric(marathon$diff)
+runners <- filter(marathon, type=='R')
+r15 <- filter(runners, year==2015)
+r16 <- filter(runners, year==2016)
+r17 <- filter(runners, year==2017)
+r18 <- filter(runners, year==2018)
+```
+
+Only take into account the runners, not the wheelchairs
+
+Let us first draw a boxplot of the performance based on gender for the 4 year span we are analyzing.
+
+```{r, gender repartition 1, fig.height=6, fig.width=6}
+marathon %>% filter(gender != 'NA') %>%
+ggplot(aes(x = factor(gender, levels = unique(gender)) , y = official_time)) +
+  geom_boxplot(fill = "royalblue2", outlier.colour = "darkorange1") + 
+  facet_grid(year~.) +
+  coord_flip() +
+  ylab("Official Time") +
+  xlab("Year") +
+  ggtitle("Each year, men perform better than women as a whole") +
+  theme(plot.title = element_text(hjust = 0.5, size=15)) +
+  theme_bw()
+```
+
+We can clearly see that men consistently perform better than women in the marathon.
+For those four years, the women's first quartile is roughly the men's median. Therefore, given this plot, there is a clear correlation between gender and performance. 
+
+However, this simple plot does not take into account the runner's physical preparation. 
+Let us now dive into the details of the race's organization.
+```{r, fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
+ggplot(r15, mapping = aes(x = bib, y = diff)) +
+  geom_point(alpha=1/5, col= "royalblue2") +
+  xlab("Bib Number") +
+  theme_bw(20) +
+  ylab("Waiting Time(s)") +
+  theme(plot.title = element_text(hjust = 0.5, size=15))+
+  ggtitle("4 different groups clearly appear!")
+```
+
+
+This first very simple plot gives us some information about the organization.
+First, there are clearly 4 different starts: 
+* as expected, the first one starts at 0. It is the one that coincide with the gun start,
+* A second start occurs 25 minutes after the gun start,
+* A third start occurs 50 minutes after the gun start,
+* The fourth start occurs 1 hour 10 minutes after the gun start.
+
+
+```{r, creating wave group, include=FALSE}
+runners$wave <- 4
+mask1 <- runners$diff < 1500
+mask2 <- (runners$diff < 3000) & (1500 <= runners$diff)
+mask3 <- (runners$diff < 4000) & (3000 <= runners$diff)
+runners$wave[mask1] <- 1
+runners$wave[mask2] <- 2
+runners$wave[mask3] <- 3
+r15 <- filter(runners, year==2015)
+r16 <- filter(runners, year==2016)
+r17 <- filter(runners, year==2017)
+r18 <- filter(runners, year==2018)
+```
+
+It is now clear that four different groups can be identified. But what are they based on?
+```{r, fig.height=6, fig.width=6}
+ggplot(r15, aes(x = factor(wave, levels = c('4','3','2','1')) , y = official_time)) +
+  geom_boxplot(fill = "royalblue2", outlier.colour = "darkorange1") +
+  coord_flip() +
+  ylab("Official Time") +
+  xlab("Group") +
+  theme_bw() +
+  ggtitle("Groups are clearly based on performance")+
+  theme(plot.title = element_text(hjust = 0.5, size=15))
+```
+
+As we could have imagined, those groups are based on performance, the first one being the best one. 
+In order to be allowed to run in a given group, participants have to prove that they already did a good enough time in an official race in the recent past. An obvious flow of this method is that rookie runners cannot be placed in their real group since they have no record. We can see one of those in the fourth group: the outlier that run it in under three hours. Moreover, if a runner is out of shape but has a good record, (s)he still can be in the first group and still perform badly. 
+
+Now that we know how the groups are structured, we can look into them to see if there is a clear pattern acknowledging the fact that men perform better in marathon than women.
+
+
+```{r, gender repartition 2, fig.height=6, fig.width=6}
+r15 %>% filter(gender != 'NA') %>%
+ggplot(aes(x = factor(gender, levels = unique(gender)) , y = official_time)) +
+  geom_boxplot(fill = "royalblue2", outlier.colour = "darkorange1") + 
+  facet_grid(wave~.) +
+  coord_flip() +
+  ylab("Official Time") +
+  xlab("Group") +
+  ggtitle("Different conclusions for each group") +
+  theme(plot.title = element_text(hjust = 0.5, size=15)) +
+  theme_bw()
+```
+
+The results are quite striking and diverse:
+* `first group`: men significantly do better than women. 
+* `second group`: men and women perform similarly.
+* `third group`: men and women perform similarly.
+* `fourth group`: men significantly do better than women.
+
+How can we explain those two completely different behaviors of our data?
+It seems that for the runners in the intermediary groups, gender does not count when it comes to the race performance. Those runners have some prior experience and/or have trained regularly to achieve those results. It lets us think that __training can erase physiological differences__. The first group case is quite easy to interpret. __For athletes, training means pushing the body to its limits__. Therefore, it is not so surprising that this group exhibit a strong performance dependence on gender, since we find that dependence in almost all athletic disciplines. 
 
 ## 4.3 Summarizing the whole race in a graph
 

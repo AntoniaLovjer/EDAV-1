@@ -935,7 +935,7 @@ gridExtra::grid.arrange(wave2, wave1, ncol=2)
 \newpage
 
 # 6. Interactive component
-Interactive component can be found in shinnyapps server [(link)](https://anavarrete.shinyapps.io/marathon_dashboard3/])
+Interactive component can be found in shinnyapps server [(link)](https://anavarrete.shinyapps.io/marathon_dashboard3/)
 
 For the interactive component, we decided to generate a dashboard that could let us summarize the information for each location (states or countries), and compare some results with the overall, across the four years of marathon data we collected. We believe that summarizing data in a graphical way
 
